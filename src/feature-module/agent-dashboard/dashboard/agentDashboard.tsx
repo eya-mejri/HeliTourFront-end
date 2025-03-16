@@ -1,18 +1,38 @@
-import React, { useState } from 'react'
+import React, { useState ,useEffect} from 'react'
+import axios from 'axios';
 import Sidebar from '../sidebar/sidebar'
 import Breadcrumb from '../../../core/common/Breadcrumb/breadcrumb';
 import { all_routes } from '../../router/all_routes';
 import { Link } from 'react-router-dom';
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import ReactApexChart from 'react-apexcharts';
-import { TableData } from '../../../core/common/data/interface';
-import Table from "../../../core/common/dataTable/index";
-import { AgentDashboardData } from '../../../core/common/data/json/agentDashboardData';
+/*import { TableData } from '../../../core/common/data/interface';*/
+/*import Table from "../../../core/common/dataTable/index";*/
+/*import { AgentDashboardData } from '../../../core/common/data/json/agentDashboardData';*/
 import AgentDhashboardModal from './agentDhashboardModal';
+import AdminCard from '../../Components/adminCard';
+import EarningCard from '../../Components/EarningCard';
+import AddCard from '../../Components/addCard';
+import { Table } from "antd";
+import type { ColumnsType } from "antd/es/table";
+import BookingTable from '../../Components/BookingTable';
+  
+
 
 const AgentDashboard = () => {
 
   const routes = all_routes;
+  //def of the variables
+  const [bookingCount, setBookingCount] = useState<number>(0);
+  const [totalEarnings, setTotalEarnings] = useState<number>(0);
+  const [profilCount, setProfilCount] = useState<number>(0);
+  const [villeBookings, setVilleBookings] = useState<{ name: string; count: number ; color: string}[]>([]);
+  const [numberVille, setNumberVille] = useState<number>(0);
+  const [circuitCount, setCircuitCount] = useState<number>(0);
+  const [reservationCount, setReservationCount] = useState<number>(0);
+  const [dataReserv, setDataReserv] = useState<any>([]);
+  
+  
   //Breadcrumb Data
   const breadcrumbs = [
     {
@@ -26,8 +46,8 @@ const AgentDashboard = () => {
     },
   ];
 
-  const [donutChart] = useState<any>({
-    series: [25, 15, 35, 5, 20],
+  const [donutChart, setDonutChart] = useState<any>({
+    series: [],
     options: {
       chart: {
         height: 181,
@@ -39,8 +59,8 @@ const AgentDashboard = () => {
       legend: {
         show: false,
       },
-      colors: ['#212E47', '#3538CD', '#0E9384', '#CF3425', '#98AA30'],
-      labels: ['Cruise', 'Cars', 'Hotels', 'Tour', 'Flights'],
+      colors: [],
+      labels: [],
       plotOptions: {
         pie: {
           donut: {
@@ -57,85 +77,97 @@ const AgentDashboard = () => {
       },
     },
   });
-
-  const [earningChart] = useState<any>({
-    series: [
-      {
-        name: 'Income',
-        data: [5000, 16000, 8000, 5000, 4000, 5000, 12000, 5000, 8000, 5000, 5000, 8000],
-      },
-      {
-        name: 'Expenses',
-        data: [5000, 4000, 4000, 5000, 8000, 5000, 4000, 5000, 4000, 5000, 5000, 4000],
-      },
-    ],
-    options: {
-      chart: {
-        height: 280,
-        type: 'bar',
-        stacked: true,
-        toolbar: {
-          show: false,
-        },
-      },
-      colors: ['#0E9384', '#E4EBF1'],
-      responsive: [
-        {
-          breakpoint: 480,
+  const colorList = [
+    '#212E47', // Teal
+    '#3538CD', // Blue
+    '#0E9384', // Green
+    '#CF3425', // Red
+    '#98AA30', // Yellow
+    '#6C757D', // Gray
+    '#FFC107', // Amber
+    '#17A2B8', // Cyan
+    '#6610F2', // Purple
+    '#E83E8C', // Pink
+  ];
+  //douraaaa
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Step 1: Fetch the list of villes
+        const villesResponse = await axios.get('http://127.0.0.1:3000/ville/getall');
+        const villes = villesResponse.data;
+        setNumberVille(villes.length);
+        
+  
+        // Step 2: Fetch the count of reservations for each ville
+        const series: number[] = []; // Create a new array for series
+        const labels: string[] = []; // Create a new array for labels
+        const colors: string[] = []; // Create a new array for colors
+        const bookings = [];
+  
+        for (let i = 0; i < villes.length; i++) {
+          const ville = villes[i];
+          
+          const reservationsResponse = await axios.get(
+            `http://127.0.0.1:3000/reservation/getByVilleName/${ville.Nom}`
+          );
+          const count = reservationsResponse.data !== null ? reservationsResponse.data.length : 0;
+          bookings.push({ name: ville.Nom, count, color: colorList[i] }); // Assign color from colorList
+          setVilleBookings(bookings);
+          
+  
+          // Check if reservationsResponse.data is not null
+          if (reservationsResponse.data !== null) {
+            series.push(reservationsResponse.data.length); // Add count to the series array
+            labels.push(ville.Nom); // Add ville name to the labels array
+            colors.push(colorList[i]); // Add color to the colors array
+          }
+        }
+  
+        // Step 3: Update the donutChart state immutably
+        setDonutChart((prevState: any) => ({
+          ...prevState,
+          series, // Use the new series array
           options: {
-            legend: {
-              position: 'bottom',
-              offsetX: -10,
-              offsetY: 0,
-            },
+            ...prevState.options,
+            labels, // Use ville names as labels
+            colors, // Use the colors array
           },
-        },
-      ],
-      plotOptions: {
-        bar: {
-          borderRadius: 5,
-          borderRadiusWhenStacked: 'all',
-          horizontal: false,
-          endingShape: 'rounded',
-        },
-      },
-      xaxis: {
-        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        labels: {
-          style: {
-            colors: '#4E5561',
-            fontSize: '12px',
-          },
-        },
-      },
-      yaxis: {
-        labels: {
-          formatter: (val: number) => {
-            return val / 1000 + 'K';
-          },
-          offsetX: -15,
-          style: {
-            colors: '#4E5561',
-            fontSize: '13px',
-          },
-        },
-      },
-      grid: {
-        show: false,
-      },
-      legend: {
-        show: false,
-      },
-      dataLabels: {
-        enabled: false, // Disable data labels
-      },
-      fill: {
-        opacity: 1,
-      },
-    },
-  });
+        }));
+  
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  
+    fetchData();
+  }, []);
 
-  const data = AgentDashboardData;
+  useEffect(() => {
+    const fetchReservationDetails = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:3000/reservation/getReservationsWithDetails');
+        if (!response.ok) {
+          throw new Error('Failed to fetch Reservations');
+        }
+        const data = await response.json();
+        
+        console.log('API Data:', data); // Log the API response
+      setDataReserv(data); // Update state
+      console.log('State update called with:', data)
+      } catch (error) {
+        console.error('Error fetching reservation:', error);
+      }
+    };
+
+    fetchReservationDetails(); // Call the function inside useEffect
+  }, []); 
+  useEffect(() => {
+    console.log('Updated dataReserv:', dataReserv);
+  }, [dataReserv]);
+
+  
+  /*const data = AgentDashboardData;
   const columns = [
     {
       title: "ID",
@@ -146,7 +178,7 @@ const AgentDashboard = () => {
           to="#"
           className="link-primary fw-medium"
           data-bs-toggle="modal"
-          data-bs-target={`#${render.action}`}
+          data-bs-target={`#${render.id}`}
         >
           {render.id}
         </Link>
@@ -237,13 +269,120 @@ const AgentDashboard = () => {
       ),
       sorter: (a: TableData, b: TableData) => a.action.length - b.action.length,
     },
-  ];
+  ];*/
+   // Fetch the number of bookings from the backend
+   useEffect(() => {
+    const fetchBookingCount = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:3000/reservation/getall');
+        if (!response.ok) {
+          throw new Error('Failed to fetch bookings');
+        }
+        const data = await response.json();
+        setBookingCount(data.length); // Set the count of bookings
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      }
+    };
+
+    fetchBookingCount();
+  }, []); 
+  // Empty dependency array ensures this runs only once on mount
+//fetch  the total earning 
+  useEffect(() => {
+    const fetchTotalEarnings = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:3000/paiements/getAllPaiements');
+        if (!response.ok) {
+          throw new Error('Failed to fetch earnings');
+        }
+        const data = await response.json();
+        const total = data.reduce((sum: number, paiement: { montant: number }) => {
+          return sum + paiement.montant;
+        }, 0);
+
+        // Set the total earnings in state
+        setTotalEarnings(total);
+      } catch (error) {
+        console.error('Error fetching earnings :', error);
+      }
+    };
+
+    fetchTotalEarnings();
+  }, []); // Empty dependency array ensures this runs only once on mount
+// Fetch the number of profiles from the backend
+useEffect(() => {
+  const fetchProfileCount = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/utilisateur/getallUsers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch profils');
+      }
+      const data = await response.json();
+      setProfilCount(data.length); // Set the count of cities
+    } catch (error) {
+      console.error('Error fetching profils:', error);
+    }
+  };
+
+  fetchProfileCount();
+}, []); 
+
+useEffect(() => {
+  const fetchCircuitCount = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/circuit/getall');
+      if (!response.ok) {
+        throw new Error('Failed to fetch circuit');
+      }
+      const data = await response.json();
+      setCircuitCount(data.length); // Set the count of tours
+    } catch (error) {
+      console.error('Error fetching profils:', error);
+    }
+  };
+
+  fetchCircuitCount();
+}, []);
+useEffect(() => {
+  const fetchReservationCount = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/reservation/getall');
+      if (!response.ok) {
+        throw new Error('Failed to fetch Reservation ');
+      }
+      const data = await response.json();
+      setReservationCount(data.length); // Set the count of bookings
+    } catch (error) {
+      console.error('Error fetching profils:', error);
+    }
+  };
+
+  fetchReservationCount();
+}, []);
+
+useEffect(() => {
+  const fetchReservationCount = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/reservation/getall');
+      if (!response.ok) {
+        throw new Error('Failed to fetch Reservation ');
+      }
+      const data = await response.json();
+      setReservationCount(data.length); // Set the count of bookings
+    } catch (error) {
+      console.error('Error fetching profils:', error);
+    }
+  };
+
+  fetchReservationCount();
+}, []);
 
 
   return (
     <div>
 
-      <Breadcrumb title="Agent Dashboard" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-04" />
+      <Breadcrumb title="Admin Dashboard" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-04" />
 
       {/* Page Wrapper */}
       <div className="content">
@@ -256,14 +395,19 @@ const AgentDashboard = () => {
             {/* /Sidebar */}
             <div className="col-xl-9 col-lg-8">
               <div className="row">
-                <div className="col-xl-3 col-sm-6 d-flex">
+                <AdminCard value={bookingCount} title="Total Bookings" class="isax-calendar-15" class2="bg-success"/>
+                <AdminCard value='23' title="Total Listing" class="isax-money-time5" class2="bg-orange"/>
+                <AdminCard value={totalEarnings} title="Total Earnings" class="isax-money-time5" class2="bg-info"/>
+                <AdminCard value={profilCount} title="Total profils" class="isax-magic-star5" class2="bg-indigo"/>
+
+                {/*<div className="col-xl-3 col-sm-6 d-flex">
                   <div className="card shadow-none flex-fill">
                     <div className="card-body text-center">
                       <span className="avatar avatar rounded-circle bg-success mb-2">
                         <i className="isax isax-calendar-15 fs-24" />
                       </span>
                       <p className="mb-1">Total Bookings</p>
-                      <h5 className="mb-2">456</h5>
+                      <h5 className="mb-2">{bookingCount}</h5>
                       <p className="d-flex align-items-center justify-content-center fs-14">
                         <i className="isax isax-arrow-up-15 me-1 text-success" />
                         20% From Last Month{" "}
@@ -295,7 +439,7 @@ const AgentDashboard = () => {
                         <i className="isax isax-money-send5 fs-24" />
                       </span>
                       <p className="mb-1">Total Earnings</p>
-                      <h5 className="mb-2">$5,6560</h5>
+                      <h5 className="mb-2">{totalEarnings}</h5>
                       <p className="d-flex align-items-center justify-content-center fs-14">
                         <i className="isax isax-arrow-down5 me-1 text-danger" />
                         15% From Last Month{" "}
@@ -309,8 +453,8 @@ const AgentDashboard = () => {
                       <span className="avatar avatar rounded-circle bg-indigo mb-2">
                         <i className="isax isax-magic-star5 fs-24" />
                       </span>
-                      <p className="mb-1">Total Reviews</p>
-                      <h5 className="mb-2">62</h5>
+                      <p className="mb-1">Total profils</p>
+                      <h5 className="mb-2">{profilCount}</h5>
                       <Link
                         to={routes.agentReview}
                         className="fs-14 link-primary text-decoration-underline"
@@ -319,7 +463,7 @@ const AgentDashboard = () => {
                       </Link>
                     </div>
                   </div>
-                </div>
+                </div>*/}
               </div>
               <div className="row">
                 {/* Bookings Statistics */}
@@ -378,7 +522,18 @@ const AgentDashboard = () => {
                           />
                         </div>
                       </div>
-                      <div className="d-flex align-items-center justify-content-between mb-2">
+                      <div>
+                      {villeBookings.map((ville) => (
+                        <div key={ville.name} className="d-flex align-items-center justify-content-between mb-2">
+                          <h6 className={`border-icon  || 'primary'}`}  style={{ color: ville.color }}>{ville.name}</h6>
+                          <p className="fs-14">
+                            <span className="text-gray-9 fw-medium">{ville.count}</span> Bookings
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                      {/*<div className="d-flex align-items-center justify-content-between mb-2">
                         <h6 className="border-icon teal">Hotels</h6>
                         <p className="fs-14">
                           <span className="text-gray-9 fw-medium">16</span> Bookings
@@ -407,14 +562,14 @@ const AgentDashboard = () => {
                         <p className="fs-14">
                           <span className="text-gray-9 fw-medium">04</span> Bookings
                         </p>
-                      </div>
+                      </div>*/}
                     </div>
                   </div>
                 </div>
                 {/* /Bookings Statistics */}
                 {/* Earnings */}
                 <div className="col-xl-8 d-flex">
-                  <div className="card shadow-none flex-fill">
+                  {/*<div className="card shadow-none flex-fill">
                     <div className="card-body pb-0">
                       <div className="d-flex justify-content-between align-items-center mb-4">
                         <h6>Earnings</h6>
@@ -462,7 +617,7 @@ const AgentDashboard = () => {
                         <div className="d-flex align-items-center justify-content-between flex-wrap">
                           <div className="mb-2">
                             <p className="mb-0">Total Earnings this Year</p>
-                            <h3>$20,659</h3>
+                            <h3>{totalEarnings}</h3>
                           </div>
                           <div className="d-flex align-items-center mb-2">
                             <p className="fs-14">
@@ -484,7 +639,8 @@ const AgentDashboard = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div>*/}
+                  <EarningCard/>
                 </div>
                 {/* /Earnings */}
               </div>
@@ -758,7 +914,11 @@ const AgentDashboard = () => {
               </div>
               {/* Add Lists */}
               <div className="row row-cols-1 row-cols-md-3 row-cols-xl-5 justify-content-center">
-                <div className="col">
+                <AddCard title="Villes" number={`${numberVille} Villes`} class="bg-success-100" lien="routes.addHotel"/>
+                <AddCard title="Circuits" number={`${circuitCount} Circuits`}  class="bg-pink-100" lien="routes.addFlight"/>
+                <AddCard title="Reserv" number={`${reservationCount} Reservations`} class="bg-danger-100" lien="routes.addTour"/>
+                <AddCard title="Car" number="9 Cars" class="bg-purple-100" lien="routes.addCar"/>
+                {/*<div className="col">
                   <div className="card bg-success-100 border-0 shadow-none">
                     <div className="card-body">
                       <h6 className="mb-1">4 Hotels</h6>
@@ -809,7 +969,7 @@ const AgentDashboard = () => {
                       </Link>
                     </div>
                   </div>
-                </div>
+                </div>*/}
                 <div className="col">
                   <div className="card bg-cyan-100 border-0 shadow-none">
                     <div className="card-body">
@@ -880,7 +1040,8 @@ const AgentDashboard = () => {
                     </div>
                   </div>
                   {/* Hotel List */}
-                  <Table dataSource={data} columns={columns} Selection={false} />
+                  {/*<Table dataSource={data} columns={columns} Selection={false} />*/}
+                  <BookingTable numPage="5"/>
                   {/* /Hotel List */}
                 </div>
               </div>

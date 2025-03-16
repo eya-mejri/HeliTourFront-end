@@ -82,6 +82,7 @@ export const all_routes = {
     agentSecuritySettings:"/agent/agent-security-settings",
     agentPlanSettings:"/agent/agent-plans-settings",
     agentPlan:"/agent/agent-plans",
+    BookingTableByVille:'/agent/agent-bookingVille/:cityName',
 
 
 

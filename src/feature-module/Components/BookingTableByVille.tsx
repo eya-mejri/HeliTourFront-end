@@ -1,139 +1,168 @@
-import React from 'react'
-import { all_routes } from '../../../router/all_routes';
-import Breadcrumb from '../../../../core/common/Breadcrumb/breadcrumb';
-import Sidebar from '../../sidebar/sidebar';
-import PredefinedDateRanges from '../../../../core/common/range-picker/datePicker';
-import { Link } from 'react-router-dom';
-import { TableData } from '../../../../core/common/data/interface';
-import Table from "../../../../core/common/dataTable/index";
-import { AgentHotelBookingData } from '../../../../core/common/data/json/agentHotelBookingData';
-import AgentHotelBookingModal from './agentHotelBookingModal';
-import BookingTable from '../../../Components/BookingTable';
+import Table, { ColumnsType } from "antd/es/table";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
+import AgentHotelBookingModal from "../agent-dashboard/Booking/hotel-booking/agentHotelBookingModal";
+import Sidebar from "../agent-dashboard/sidebar/sidebar";
+import { all_routes } from "../router/all_routes";
+import Breadcrumb from '../../core/common/Breadcrumb/breadcrumb';
+import PredefinedDateRanges from "../../core/common/range-picker/datePicker";
+interface AgentBookingPageProps {
+   
+  }
+  
+interface Reservation {
+    _id: string; // reservationId is mapped from _id
+    Num_Reservation: string;
+    reservationDate: string;
+    circuitName: string;
+    numberOfVoyageurs: number;
+    reservationStatus: string;
+    paiement: Array<Array<{
+      _id: string;
+      reservation_id: string;
+      montant: number;
+      devise: string;
+      statut: string;
+      date_paiement: string;
+      __v: number;
+    }>>;
+  }
+  
+  interface TableData {
+    key: string;
+    reservationId: string;
+    numReservation: string;
+    circuitName: string;
+    numberOfVoyageurs: string;
+    reservationDate: string;
+    reservationStatus: string;
+    pricing: string;
+    paymentStatus: string;
+  }
+const BookingTableByVille: React.FC<AgentBookingPageProps> = ()=>{
+    const [reservations, setReservations] = useState<Reservation[]>([]); // State to store fetched data
+  const [loading, setLoading] = useState<boolean>(true); // State to handle loading state
+  const { cityName } = useParams();
 
-const AgentHotelBooking = () => {
 
-    const routes = all_routes;
-    //Breadcrumb Data
-    const breadcrumbs = [
-        {
-            label: 'Hotel Bookings',
-            active: false,
-            link: routes.home1
-        },
-        {
-            label: 'Hotel Bookings',
-            active: true,
-        },
-    ];
+  const routes = all_routes;
+      //Breadcrumb Data
+      const breadcrumbs = [
+          {
+              label: 'Hotel Bookings',
+              active: false,
+              link: routes.home1
+          },
+          {
+              label: 'Hotel Bookings',
+              active: true,
+          },
+      ];
+  // Fetch data from the API
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:3000/reservation/getReservationsByVille/${cityName}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch reservations");
+        }
+        const data = await response.json(); // Log the API response
+        setReservations(data);
+        
+      } catch (error) {
+        console.error("Error fetching reservations:", error);
+      } finally {
+        setLoading(false); // Set loading to false after fetching
+      }
+    };
 
+    fetchReservations();
+  }, [cityName]);
+  
 
-    const data = AgentHotelBookingData;
-    const columns = [
-        {
-            title: "ID",
-            dataIndex: "id",
-            key: "id",
-            render: (text: any, render: any) => (
-                <Link
-                    to="#"
-                    className="link-primary fw-medium"
-                    data-bs-toggle="modal"
-                    data-bs-target={`#${render.action}`}
-                >
-                    {render.id}
-                </Link>
+  // Transform the fetched data to match the table's expected structure
+  const transformedData: TableData[] = reservations.map((reservation) => {
+    // Extract payment details (if available)
+    const payment = reservation.paiement?.[0]?.[0]; // Get the first payment record
+    const paymentAmount = payment?.montant || 0; // Default to 0 if no payment
+    const paymentCurrency = payment?.devise || "N/A"; // Default to "N/A" if no payment
+    const paymentStatus = payment?.statut || "N/A"; // Default to "N/A" if no payment
+  
+    return {
+      key: reservation._id, // Use _id as the key
+      numReservation: reservation.Num_Reservation,
+      reservationId: reservation._id, // Use _id as reservationId
+      circuitName: reservation.circuitName,
+      numberOfVoyageurs: `${reservation.numberOfVoyageurs} Voyageurs`, // Format numberOfVoyageurs
+      reservationDate: new Date(reservation.reservationDate).toLocaleDateString(), // Format reservationDate
+      reservationStatus: reservation.reservationStatus,
+      pricing: `${paymentAmount} ${paymentCurrency}`, // Format pricing
+      paymentStatus: paymentStatus, // Include payment status
+    };
+  });
 
-            ),
-            sorter: (a: TableData, b: TableData) => a.id.length - b.id.length,
-        },
-        {
-            title: "Hotel",
-            dataIndex: "hotel",
-            key: "hotel",
-            render: (text: any, render: any) => (
-                <div>
-                    <p className="text-dark mb-0 fw-medium fs-14">
-                        <Link to={routes.hotelDetails}>{render.hotelName}</Link>
-                    </p>
-                    <span className="fs-14 fw-normal text-gray-6">{render.location}</span>
-                </div>
-            ),
-            sorter: (a: TableData, b: TableData) =>
-                a.hotel.length - b.hotel.length,
-        },
-        {
-            title: "Booked By",
-            dataIndex: "bookedBy",
-            key: "bookedBy",
-            render: (text: any, render: any) => (
-                <>
-                    <h6 className="fs-14 mb-1">{render.bookedBy}</h6>
-                    <span className="fs-14 fw-normal text-gray-6">{render.bookedLocation}</span>
-                </>
-            ),
-            sorter: (a: TableData, b: TableData) => a.bookedby.length - b.bookedby.length,
-        },
-        {
-            title: "Room & Guest",
-            dataIndex: "room",
-            key: "room",
-            render: (text: any, render: any) => (
-                <>
-                    <h6 className="fs-14 mb-1">{render.room}</h6>
-                    <span className="fs-14 fw-normal text-gray-6">{render.guest}</span>
-                </>
-            ),
-            sorter: (a: TableData, b: TableData) => a.room.length - b.room.length,
-        },
-        {
-            title: "Days",
-            dataIndex: "days",
-            key: "days",
-            sorter: (a: TableData, b: TableData) => a.days.length - b.days.length,
-        },
-        {
-            title: "Pricing",
-            dataIndex: "pricing",
-            key: "pricing",
-            sorter: (a: TableData, b: TableData) => a.pricing.length - b.pricing.length,
-        },
-        {
-            title: "Booked on",
-            dataIndex: "bookedOn",
-            key: "bookedOn",
-            sorter: (a: TableData, b: TableData) => a.date.length - b.date.length,
-        },
-        {
-            title: "Status",
-            dataIndex: "status",
-            render: (text: any, render: any) => (
-                <span className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${text === 'Upcoming' ? 'badge-info' : text === 'Pending' ? 'badge-secondary' : text === 'Cancelled' ? 'badge-danger' : text === 'Completed' ? 'badge-success' : ''}`}>
-                    <i className="fa-solid fa-circle fs-5 me-1" />
-                    {render.status}
-                </span>
-
-            ),
-            sorter: (a: TableData, b: TableData) => a.status.length - b.status.length,
-        },
-        {
-            title: "",
-            dataIndex: "action",
-            render: (text: any, render: any) => (
-                <div className="d-flex align-items-center">
-                    <Link
-                        to="#"
-                        data-bs-toggle="modal"
-                        data-bs-target={`#${render.action}`}
-                    >
-                        <i className="isax isax-eye" />
-                    </Link>
-                </div>
-            ),
-            sorter: (a: TableData, b: TableData) => a.action.length - b.action.length,
-        },
-    ];
-
-    return (
+  // Define the columns for the table
+  const columns: ColumnsType<TableData> = [
+    {
+      title: "ID",
+      dataIndex: "numReservation",
+      key: "numReservation",
+      render: (text: string) => (
+        <Link
+          to="#"
+          className="link-primary fw-medium"
+          data-bs-toggle="modal"
+          data-bs-target={`#${text}`}
+        >
+          {text}
+        </Link>
+      ),
+    },
+    {
+      title: "Circuit Name",
+      dataIndex: "circuitName",
+      key: "circuitName",
+    },
+    {
+      title: "Number of Voyageurs",
+      dataIndex: "numberOfVoyageurs",
+      key: "numberOfVoyageurs",
+    },
+    {
+      title: "Reservation Date",
+      dataIndex: "reservationDate",
+      key: "reservationDate",
+    },
+    {
+      title: "Status",
+      dataIndex: "paymentStatus",
+      key: "paymentStatus",
+      render: (text: string) => (
+        <span
+          className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${
+            text === "réussi"
+              ? "badge-success"
+              : text === "en_attente"
+              ? "badge-warning"
+              : text === "échoué"
+              ? "badge-danger"
+              : ""
+          }`}
+        >
+          <i className="fa-solid fa-circle fs-5 me-1" />
+          {text}
+        </span>
+      ),
+    },
+    {
+      title: "Pricing",
+      dataIndex: "pricing",
+      key: "pricing",
+    },
+  ];
+  
+    return(
+        <>
         <div>
             <Breadcrumb title="Hotel Bookings" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-04" />
 
@@ -315,7 +344,17 @@ const AgentHotelBooking = () => {
                                         </div>
                                     </div>
                                     {/* Hotel List */}
-                                   <BookingTable numPage="10" />
+                                    <Table
+                    columns={columns}
+                    dataSource={transformedData}
+                    loading={loading}
+                    pagination={{
+                      pageSize:10 , // Show 5 items per page
+                      showSizeChanger: true, // Allow changing page size
+                      pageSizeOptions: ["5", "10", "20", "30"], // Options for page size
+                    }}
+                  />
+        
                                     {/* /Hotel List */}
                                 </div>
                             </div>
@@ -329,7 +368,7 @@ const AgentHotelBooking = () => {
             <AgentHotelBookingModal />
 
         </div>
+       </>
     )
 }
-
-export default AgentHotelBooking
+export default BookingTableByVille;

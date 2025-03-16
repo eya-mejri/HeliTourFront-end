@@ -102,6 +102,7 @@ import AgentNotification from "../agent-dashboard/agent-notification/agentNotifi
 import HomeOneRTL from "../pages/rtl/home-one/homeOne";
 import ComingSoon from "../pages/coming-soon/comingSoon";
 import TermsConditions from "../pages/terms-conditions/termsConditions";
+import BookingTableByVille from "../Components/BookingTableByVille";
 const routes = all_routes;
 
 export const publicRoutes = [
@@ -616,6 +617,12 @@ export const publicRoutes = [
     element: <TermsConditions />,
     route: Route,
   },
+  {
+    path: routes.BookingTableByVille,
+    element: <BookingTableByVille />,
+    route: Route,
+  },
+
 
 ];
 
