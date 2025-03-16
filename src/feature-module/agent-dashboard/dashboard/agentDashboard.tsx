@@ -16,6 +16,7 @@ import AddCard from '../../Components/addCard';
 import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import BookingTable from '../../Components/BookingTable';
+import BookingStat from '../../Components/BookingStat';
   
 
 
@@ -36,12 +37,12 @@ const AgentDashboard = () => {
   //Breadcrumb Data
   const breadcrumbs = [
     {
-      label: 'Agent Dashboard',
+      label: 'Admin Dashboard',
       active: false,
-      link: routes.home1
+      link: routes.home1,
     },
     {
-      label: 'Agent Dashboard',
+      label: 'Admin Dashboard',
       active: true,
     },
   ];
@@ -468,7 +469,7 @@ useEffect(() => {
               <div className="row">
                 {/* Bookings Statistics */}
                 <div className="col-xl-4 d-flex">
-                  <div className="card shadow-none flex-fill">
+                 {/* <div className="card shadow-none flex-fill">
                     <div className="card-body">
                       <div className="d-flex justify-content-between align-items-center mb-4">
                         <h6>Bookings Statistics</h6>
@@ -562,9 +563,10 @@ useEffect(() => {
                         <p className="fs-14">
                           <span className="text-gray-9 fw-medium">04</span> Bookings
                         </p>
-                      </div>*/}
+                      </div>
                     </div>
-                  </div>
+                  </div>*/}
+                  <BookingStat/>
                 </div>
                 {/* /Bookings Statistics */}
                 {/* Earnings */}
