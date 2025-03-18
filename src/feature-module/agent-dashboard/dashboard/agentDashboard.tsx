@@ -153,9 +153,9 @@ const AgentDashboard = () => {
         }
         const data = await response.json();
         
-        console.log('API Data:', data); // Log the API response
+        /*console.log('API Data:', data); // Log the API response*/
       setDataReserv(data); // Update state
-      console.log('State update called with:', data)
+      /*console.log('State update called with:', data)*/
       } catch (error) {
         console.error('Error fetching reservation:', error);
       }
@@ -164,7 +164,7 @@ const AgentDashboard = () => {
     fetchReservationDetails(); // Call the function inside useEffect
   }, []); 
   useEffect(() => {
-    console.log('Updated dataReserv:', dataReserv);
+    /*console.log('Updated dataReserv:', dataReserv);*/
   }, [dataReserv]);
 
   

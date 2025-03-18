@@ -1,33 +1,48 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { all_routes } from '../../../router/all_routes';
 import Breadcrumb from '../../../../core/common/Breadcrumb/breadcrumb';
 import Sidebar from '../../sidebar/sidebar';
 import PredefinedDateRanges from '../../../../core/common/range-picker/datePicker';
 import { Link } from 'react-router-dom';
-import { TableData } from '../../../../core/common/data/interface';
+/*import { TableData } from '../../../../core/common/data/interface';
 import Table from "../../../../core/common/dataTable/index";
-import { AgentHotelBookingData } from '../../../../core/common/data/json/agentHotelBookingData';
+import { AgentHotelBookingData } from '../../../../core/common/data/json/agentHotelBookingData';*/
 import AgentHotelBookingModal from './agentHotelBookingModal';
 import BookingTable from '../../../Components/BookingTable';
 
 const AgentHotelBooking = () => {
-
+    const [reservationCount,setReservationCount]=useState<number>(0);
     const routes = all_routes;
     //Breadcrumb Data
     const breadcrumbs = [
         {
-            label: 'Hotel Bookings',
+            label: 'All Bookings',
             active: false,
             link: routes.home1
         },
         {
-            label: 'Hotel Bookings',
+            label: 'All Bookings',
             active: true,
         },
     ];
+useEffect (()=>{
+    const fetchReservations =async ()=>{
+        try{
+            const res = await fetch ("http://127.0.0.1:3000/reservation/getall");
+            if (!res.ok){
+                throw new Error("failed to fetch reservations");
+            }const data=await res.json();
+            setReservationCount(data.length);
+        }catch(err){
+            console.log("error fetching ",err);
+        }
+    }
+    
+    fetchReservations();
+},[])
 
 
-    const data = AgentHotelBookingData;
+    /*const data = AgentHotelBookingData;
     const columns = [
         {
             title: "ID",
@@ -131,11 +146,11 @@ const AgentHotelBooking = () => {
             ),
             sorter: (a: TableData, b: TableData) => a.action.length - b.action.length,
         },
-    ];
+    ];*/
 
     return (
         <div>
-            <Breadcrumb title="Hotel Bookings" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-04" />
+            <Breadcrumb title="All Bookings" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-04" />
 
             {/* Page Wrapper */}
             <div className="content">
@@ -151,9 +166,9 @@ const AgentHotelBooking = () => {
                             <div className="card booking-header border-0">
                                 <div className="card-body header-content d-flex align-items-center justify-content-between flex-wrap ">
                                     <div>
-                                        <h6 className="mb-1">Hotel Bookings</h6>
+                                        <h6 className="mb-1">All Bookings</h6>
                                         <p className="fs-14 text-gray-6 fw-normal ">
-                                            No of Booking : 150
+                                            all Booking : {reservationCount}
                                         </p>
                                     </div>
                                     <div className="d-flex align-items-center flex-wrap">
