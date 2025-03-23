@@ -1,14 +1,50 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react';
 import { all_routes } from '../../router/all_routes';
 import Breadcrumb from '../../../core/common/Breadcrumb/breadcrumb';
 import Sidebar from '../sidebar/sidebar';
 import { Link } from 'react-router-dom';
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import AgentListingModal from './modal/agentListingModal';
+import axios from 'axios';
+
+// Définir un type pour les villes
+interface Ville {
+    _id: string;
+    Nom: string;
+    Description: string;
+    image?: string; // Optionnel
+}
+
+// Définir un type pour les circuits
+interface Circuit {
+    _id: string;
+    Nom: string;
+    Description: string;
+    Prix: number;
+    Disponibilite: boolean;
+    villeId: string;
+}
 
 const AgentListings = () => {
-    const routes = all_routes;
-    //Breadcrumb Data
+    const routes = {
+        ...all_routes,
+        addCity: '/add-city',
+        cityDetails: '/city-details',
+        editCity: '/edit-city',
+        addCircuit: '/add-circuit', // Ajoutez cette route
+        circuitDetails: '/circuit-details', // Ajoutez cette route
+        editCircuit: '/edit-circuit', // Ajoutez cette route
+    };
+
+    // État pour stocker les villes
+    const [villes, setVilles] = useState<Ville[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // État pour stocker les circuits
+    const [circuits, setCircuits] = useState<Circuit[]>([]);
+    const [circuitLoading, setCircuitLoading] = useState(true);
+
+    // Breadcrumb Data
     const breadcrumbs = [
         {
             label: 'Listings',
@@ -21,6 +57,53 @@ const AgentListings = () => {
         },
     ];
 
+    // Fonction pour récupérer les villes depuis l'API
+    const fetchVilles = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:3000/ville/villes');
+            console.log('Réponse de l\'API:', response.data); // Log pour déboguer
+            if (response.data && Array.isArray(response.data.villes)) {
+                setVilles(response.data.villes);
+            } else {
+                console.error('La réponse de l\'API n\'est pas un tableau de villes:', response.data);
+            }
+        } catch (error) {
+            console.error('Erreur lors de la récupération des villes:', error);
+        } finally {
+            setLoading(false); // Désactive le chargement une fois terminé
+        }
+    };
+
+    // Fonction pour récupérer les circuits depuis l'API
+    const fetchCircuits = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:3000/circuit/circuits');
+            console.log('Réponse de l\'API:', response.data); // Log pour déboguer
+            if (response.data && Array.isArray(response.data)) {
+                setCircuits(response.data);
+            } else {
+                console.error('La réponse de l\'API n\'est pas un tableau de circuits:', response.data);
+            }
+        } catch (error) {
+            console.error('Erreur lors de la récupération des circuits:', error);
+        } finally {
+            setCircuitLoading(false); // Désactive le chargement une fois terminé
+        }
+    };
+
+    // Utiliser useEffect pour appeler fetchVilles et fetchCircuits au chargement du composant
+    useEffect(() => {
+        fetchVilles();
+        fetchCircuits();
+    }, []);
+
+    if (loading || circuitLoading) {
+        return <div>Chargement en cours...</div>;
+    }
+
+    if (villes.length === 0 || circuits.length === 0) {
+        return <div>Aucune donnée trouvée.</div>;
+    }
 
     return (
         <div>
@@ -43,9 +126,9 @@ const AgentListings = () => {
                                                 to="#"
                                                 className="nav-link active"
                                                 data-bs-toggle="tab"
-                                                data-bs-target="#Hotels-list"
+                                                data-bs-target="#Circuits-list"
                                             >
-                                                Hotels
+                                                Circuits
                                             </Link>
                                         </li>
                                         <li className="me-2">
@@ -53,39 +136,9 @@ const AgentListings = () => {
                                                 to="#"
                                                 className="nav-link"
                                                 data-bs-toggle="tab"
-                                                data-bs-target="#Cars-list"
+                                                data-bs-target="#Cities-list"
                                             >
-                                                Cars
-                                            </Link>
-                                        </li>
-                                        <li className="me-2">
-                                            <Link
-                                                to="#"
-                                                className="nav-link"
-                                                data-bs-toggle="tab"
-                                                data-bs-target="#Cruise-list"
-                                            >
-                                                Cruise
-                                            </Link>
-                                        </li>
-                                        <li className="me-2">
-                                            <Link
-                                                to="#"
-                                                className="nav-link"
-                                                data-bs-toggle="tab"
-                                                data-bs-target="#Tour-list"
-                                            >
-                                                Tour
-                                            </Link>
-                                        </li>
-                                        <li>
-                                            <Link
-                                                to="#"
-                                                className="nav-link"
-                                                data-bs-toggle="tab"
-                                                data-bs-target="#flight-list"
-                                            >
-                                                Flights
+                                                Villes
                                             </Link>
                                         </li>
                                     </ul>
@@ -95,7 +148,6 @@ const AgentListings = () => {
                                         to="#"
                                         className="dropdown-toggle text-gray-6 btn  rounded border d-inline-flex align-items-center"
                                         data-bs-toggle="dropdown"
-                                        
                                     >
                                         All Listing
                                     </Link>
@@ -120,1293 +172,277 @@ const AgentListings = () => {
                                 </div>
                             </div>
                             <div className="tab-content">
-                                {/* Hotels List */}
-                                <div className="tab-pane fade active show" id="Hotels-list">
+                                {/* Circuits List */}
+                                <div className="tab-pane fade active show" id="Circuits-list">
                                     <div className="card border-0">
                                         <div className="card-body d-flex align-items-center justify-content-between flex-wrap row-gap-2">
                                             <div>
                                                 <h5 className="mb-1">Listings</h5>
-                                                <p>No of Listings : 200</p>
+                                                <p>No of Circuits : {circuits.length}</p>
                                             </div>
                                             <div>
                                                 <Link
-                                                    to={routes.addHotel}
+                                                    to={routes.addCircuit}
                                                     className="btn btn-primary d-inline-flex align-items-center me-0"
                                                 >
                                                     <i className="isax isax-add me-1 fs-16" />
-                                                    Add Listing
+                                                    Add Circuit
                                                 </Link>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="row justify-content-center">
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-01.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
+                                        {circuits.map((circuit) => (
+                                            <div className="col-xxl-4 col-md-6 d-flex" key={circuit._id}>
+                                                <div className="place-item mb-4 flex-fill">
+                                                    <div className="place-img">
+                                                        <Link to={`${routes.circuitDetails}/${circuit._id}`}>
+                                                            <ImageWithBasePath
+                                                                src='assets/img/circuits/default.jpg'
+                                                                className="img-fluid"
+                                                                alt="img"
+                                                            />
                                                         </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>Hotel Plaza Athenee</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Ciutat Vella, Barcelona
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $500{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
-                                                        </h5>
-                                                        <div className="d-flex align-items-center lh-1">
+                                                        <div className="edit-delete-item d-flex align-items-center">
                                                             <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
+                                                                to={`/editcircuit/${circuit.Nom}`}
+                                                                className="me-2 d-inline-flex align-items-center justify-content-center"
                                                             >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-05.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>The Luxe Haven</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Oxford Street, London
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $600{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
-                                                        </h5>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-06.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>The Urban Retreat</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Princes Street, Edinburgh
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $500{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
-                                                        </h5>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-07.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>The Grand Horizon</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Deansgate, Manchester
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $400{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
-                                                        </h5>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link to="#" className="me-2 d-inline-flex">
                                                                 <i className="isax isax-edit" />
                                                             </Link>
-                                                            <Link to="#" className="me-2 d-inline-flex">
+                                                            <Link
+                                                                to="#"
+                                                                className="d-inline-flex align-items-center justify-content-center"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#delete-list"
+                                                            >
                                                                 <i className="isax isax-trash" />
                                                             </Link>
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-08.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>Hotel Evergreen </Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        King’s Road, Chelsea
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $550{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
+                                                    <div className="place-content">
+                                                        <h5 className="mb-1 text-truncate">
+                                                            <Link to={`${routes.circuitDetails}/${circuit._id}`}>{circuit.Nom}</Link>
                                                         </h5>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
+                                                        <p className="d-flex align-items-center mb-3">
+                                                            <i className="isax isax-location5 me-2" />
+                                                            {circuit.Description}
+                                                        </p>
+                                                        <div className="d-flex align-items-center justify-content-between border-top pt-3">
+                                                            <div className="d-flex flex-wrap align-items-center me-2">
+                                                                <h5 className="text-primary">
+                                                                    ${circuit.Prix}{" "}
+                                                                    <span className="fs-14 text-gray-6 fw-normal">
+                                                                        / day
+                                                                    </span>
+                                                                </h5>
+                                                            </div>
+                                                            <div className="d-flex align-items-center lh-1">
+                                                                <Link
+                                                                    to="#inactive_list"
+                                                                    data-bs-toggle="modal"
+                                                                    className="d-flex align-items-center"
+                                                                >
+                                                                    <i className="isax isax-info-circle me-1" />
+                                                                    Active
+                                                                </Link>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-09.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>Stardust Hotel</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Bold Street, Liverpool
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $450{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
-                                                        </h5>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-10.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>Hotel Serene Valley</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Broad Street, Bristol
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $350{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
-                                                        </h5>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-11.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>Hotel Skyline Vista</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Chapel Street, Salford
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $700{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
-                                                        </h5>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        {/* Hotel Grid */}
-                                        <div className="col-xl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.hotelDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/hotels/hotel-12.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editHotel}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.hotelDetails}>Hotel Aurora Bliss</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-2">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Castle Street, Cambridge
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <h5 className="text-primary text-nowrap me-2">
-                                                            $650{" "}
-                                                            <span className="fs-14 fw-normal text-default">
-                                                                / Night
-                                                            </span>
-                                                        </h5>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Hotel Grid */}
-                                        <div className="col-md-12">
-                                            {/* Pagination */}
-                                            <nav className="pagination-nav">
-                                                <ul className="pagination justify-content-center">
-                                                    <li className="page-item disabled">
-                                                        <Link
-                                                            className="page-link"
-                                                            to="#"
-                                                            aria-label="Previous"
-                                                        >
-                                                            <span aria-hidden="true">
-                                                                <i className="fa-solid fa-chevron-left" />
-                                                            </span>
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link className="page-link" to="#">
-                                                            1
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link className="page-link" to="#">
-                                                            2
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link className="page-link" to="#">
-                                                            3
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item active">
-                                                        <Link className="page-link" to="#">
-                                                            4
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link className="page-link" to="#">
-                                                            5
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link
-                                                            className="page-link"
-                                                            to="#"
-                                                            aria-label="Next"
-                                                        >
-                                                            <span aria-hidden="true">
-                                                                <i className="fa-solid fa-chevron-right" />
-                                                            </span>
-                                                        </Link>
-                                                    </li>
-                                                </ul>
-                                            </nav>
-                                            {/* /Pagination */}
-                                        </div>
+                                        ))}
                                     </div>
+                                    {/* Pagination */}
+                                    <div className="col-md-12">
+                                        <nav className="pagination-nav">
+                                            <ul className="pagination justify-content-center">
+                                                <li className="page-item disabled">
+                                                    <Link
+                                                        className="page-link"
+                                                        to="#"
+                                                        aria-label="Previous"
+                                                    >
+                                                        <span aria-hidden="true">
+                                                            <i className="fa-solid fa-chevron-left" />
+                                                        </span>
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link className="page-link" to="#">
+                                                        1
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link className="page-link" to="#">
+                                                        2
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link className="page-link" to="#">
+                                                        3
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item active">
+                                                    <Link className="page-link" to="#">
+                                                        4
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link className="page-link" to="#">
+                                                        5
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link
+                                                        className="page-link"
+                                                        to="#"
+                                                        aria-label="Next"
+                                                    >
+                                                        <span aria-hidden="true">
+                                                            <i className="fa-solid fa-chevron-right" />
+                                                        </span>
+                                                    </Link>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                    {/* /Pagination */}
                                 </div>
-                                {/* /Hotels List */}
-                                {/* Cars List */}
-                                <div className="tab-pane fade" id="Cars-list">
+                                {/* /Circuits List */}
+
+                                {/* Cities List */}
+                                <div className="tab-pane fade" id="Cities-list">
                                     <div className="card border-0">
                                         <div className="card-body d-flex align-items-center justify-content-between flex-wrap row-gap-2">
                                             <div>
                                                 <h5 className="mb-1">Listings</h5>
-                                                <p>No of Listings : 200</p>
+                                                <p>No of Villes : {villes.length}</p>
                                             </div>
                                             <div>
                                                 <Link
-                                                    to={routes.addCar}
+                                                    to={routes.addCity}
                                                     className="btn btn-primary d-inline-flex align-items-center me-0"
                                                 >
                                                     <i className="isax isax-add me-1 fs-16" />
-                                                    Add Listing
+                                                    Add Ville
                                                 </Link>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="row justify-content-center">
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-06.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
+                                        {villes.map((ville) => (
+                                            <div className="col-xxl-4 col-md-6 d-flex" key={ville._id}>
+                                                <div className="place-item mb-4 flex-fill">
+                                                    <div className="place-img">
+                                                        <Link to={`${routes.cityDetails}/${ville._id}`}>
+                                                            <ImageWithBasePath
+                                                                src='assets/img/cities/default.jpg'
+                                                                className="img-fluid"
+                                                                alt="img"
+                                                            />
                                                         </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>Toyota Camry SE 400</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Ciutat Vella, Barcelona
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $500{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
+                                                        <div className="edit-delete-item d-flex align-items-center">
                                                             <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
+                                                                to={`/editville/${ville.Nom}`}
+                                                                className="me-2 d-inline-flex align-items-center justify-content-center"
                                                             >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
+                                                                <i className="isax isax-edit" />
                                                             </Link>
+                                                            <Link
+                                                                to="#"
+                                                                className="d-inline-flex align-items-center justify-content-center"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#delete-list"
+                                                            >
+                                                                <i className="isax isax-trash" />
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                    <div className="place-content">
+                                                        <h5 className="mb-1 text-truncate">
+                                                            <Link to={`${routes.cityDetails}/${ville._id}`}>{ville.Nom}</Link>
+                                                        </h5>
+                                                        <p className="d-flex align-items-center mb-3">
+                                                            <i className="isax isax-location5 me-2" />
+                                                            {ville.Description}
+                                                        </p>
+                                                        <div className="d-flex align-items-center justify-content-between border-top pt-3">
+                                                            <div className="d-flex flex-wrap align-items-center me-2">
+                                                                <h5 className="text-primary">
+                                                                </h5>
+                                                            </div>
+                                                            <div className="d-flex align-items-center lh-1">
+                                                                <Link
+                                                                    to="#inactive_list"
+                                                                    data-bs-toggle="modal"
+                                                                    className="d-flex align-items-center"
+                                                                >
+                                                                </Link>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-07.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>Ford Mustang 4.0 AT</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Oxford Street, London
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $600{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-08.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>Ferrari 458 MM Special</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Princes Street, Edinburgh
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $300{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-09.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>Mercedes-benz Convertible</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Princes Street, Edinburgh
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $400{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#active_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center text-danger"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Inactive
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-10.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>BMW 3.0 Gran Turismo</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        King’s Road, Chelsea
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $550{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-11.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>Infiniti QX60 </Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Bold Street, Liverpool
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $450{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-12.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>Toyota 86 Sports</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Broad Street, Bristol
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $350{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-13.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>Jeep Wrangler</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Chapel Street, Salford
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $700{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#active_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center text-danger"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Inactive
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        {/* Car Grid */}
-                                        <div className="col-xxl-4 col-md-6 d-flex">
-                                            <div className="place-item mb-4 flex-fill">
-                                                <div className="place-img">
-                                                    <Link to={routes.carDetails}>
-                                                        <ImageWithBasePath
-                                                            src="assets/img/cars/car-14.jpg"
-                                                            className="img-fluid"
-                                                            alt="img"
-                                                        />
-                                                    </Link>
-                                                    <div className="edit-delete-item d-flex align-items-center">
-                                                        <Link
-                                                            to={routes.editCar}
-                                                            className="me-2 d-inline-flex align-items-center justify-content-center"
-                                                        >
-                                                            <i className="isax isax-edit" />
-                                                        </Link>
-                                                        <Link
-                                                            to="#"
-                                                            className="d-inline-flex align-items-center justify-content-center"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#delete-list"
-                                                        >
-                                                            <i className="isax isax-trash" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <div className="place-content">
-                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                        <div className="d-flex flex-wrap align-items-center">
-                                                            <span className="badge badge-secondary  fs-10 fw-medium me-1">
-                                                                Sedan
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <h5 className="mb-1 text-truncate">
-                                                        <Link to={routes.carDetails}>Jaguar XK</Link>
-                                                    </h5>
-                                                    <p className="d-flex align-items-center mb-3">
-                                                        <i className="isax isax-location5 me-2" />
-                                                        Castle Street, Cambridge
-                                                    </p>
-                                                    <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                        <div className="d-flex flex-wrap align-items-center me-2">
-                                                            <h5 className="text-primary">
-                                                                $650{" "}
-                                                                <span className="fs-14 text-gray-6 fw-normal">
-                                                                    / day
-                                                                </span>
-                                                            </h5>
-                                                        </div>
-                                                        <div className="d-flex align-items-center lh-1">
-                                                            <Link
-                                                                to="#inactive_list"
-                                                                data-bs-toggle="modal"
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                <i className="isax isax-info-circle me-1" />
-                                                                Active
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Car Grid */}
-                                        <div className="col-md-12">
-                                            {/* Pagination */}
-                                            <nav className="pagination-nav">
-                                                <ul className="pagination justify-content-center">
-                                                    <li className="page-item disabled">
-                                                        <Link
-                                                            className="page-link"
-                                                            to="#"
-                                                            aria-label="Previous"
-                                                        >
-                                                            <span aria-hidden="true">
-                                                                <i className="fa-solid fa-chevron-left" />
-                                                            </span>
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link className="page-link" to="#">
-                                                            1
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link className="page-link" to="#">
-                                                            2
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link className="page-link" to="#">
-                                                            3
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item active">
-                                                        <Link className="page-link" to="#">
-                                                            4
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link className="page-link" to="#">
-                                                            5
-                                                        </Link>
-                                                    </li>
-                                                    <li className="page-item">
-                                                        <Link
-                                                            className="page-link"
-                                                            to="#"
-                                                            aria-label="Next"
-                                                        >
-                                                            <span aria-hidden="true">
-                                                                <i className="fa-solid fa-chevron-right" />
-                                                            </span>
-                                                        </Link>
-                                                    </li>
-                                                </ul>
-                                            </nav>
-                                            {/* /Pagination */}
-                                        </div>
+                                        ))}
                                     </div>
+                                    {/* Pagination */}
+                                    <div className="col-md-12">
+                                        <nav className="pagination-nav">
+                                            <ul className="pagination justify-content-center">
+                                                <li className="page-item disabled">
+                                                    <Link
+                                                        className="page-link"
+                                                        to="#"
+                                                        aria-label="Previous"
+                                                    >
+                                                        <span aria-hidden="true">
+                                                            <i className="fa-solid fa-chevron-left" />
+                                                        </span>
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link className="page-link" to="#">
+                                                        1
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link className="page-link" to="#">
+                                                        2
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link className="page-link" to="#">
+                                                        3
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item active">
+                                                    <Link className="page-link" to="#">
+                                                        4
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link className="page-link" to="#">
+                                                        5
+                                                    </Link>
+                                                </li>
+                                                <li className="page-item">
+                                                    <Link
+                                                        className="page-link"
+                                                        to="#"
+                                                        aria-label="Next"
+                                                    >
+                                                        <span aria-hidden="true">
+                                                            <i className="fa-solid fa-chevron-right" />
+                                                        </span>
+                                                    </Link>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                    {/* /Pagination */}
                                 </div>
-                                {/* /Cars List */}
+                                {/* /Cities List */}
                                 {/* Cruise List */}
                                 <div className="tab-pane fade" id="Cruise-list">
                                     <div className="card border-0">
@@ -3365,3 +2401,7 @@ const AgentListings = () => {
 }
 
 export default AgentListings
+function setCircuitLoading(arg0: boolean) {
+    throw new Error('Function not implemented.');
+}
+

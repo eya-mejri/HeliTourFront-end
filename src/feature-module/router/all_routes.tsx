@@ -1,3 +1,4 @@
+import AddCar from "../car/add-car/addCar";
 
 export const all_routes = {
     //Home
@@ -25,6 +26,7 @@ export const all_routes = {
 
 
     //Hotel
+    editcircuit:"/editcircuit/:circuit",
     addHotel: "/hotel/add-hotel",
     hotelGrid: "/hotel/hotel-grid",
     hotelList: "/hotel/hotel-list",
@@ -34,6 +36,8 @@ export const all_routes = {
     hotelBookingConfirmation: "/hotel/hotel-booking-confirmation",
 
     //Car
+    AddCar:"add-city",
+    editville:"/editville/:ville",
     addCar: "/car/add-car",
     carGrid: "/car/car-grid",
     carList: "/car/car-list",

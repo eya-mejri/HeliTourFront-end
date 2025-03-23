@@ -112,6 +112,21 @@ export const publicRoutes = [
     route: Route,
   },
   {
+    path: routes.AddCar,
+    element: <AddCar/>,
+    route: Route,
+  },
+  {
+    path: routes.editcircuit,
+    element: <EditHotel />,
+    route: Route,
+  },
+  {
+    path: routes.editville,
+    element: <EditCar />,
+    route: Route,
+  },
+  {
     path: routes.home1,
     element: <HomeOne />,
     route: Route,
