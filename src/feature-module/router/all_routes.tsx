@@ -52,7 +52,7 @@ export const all_routes = {
     cruiseMap: "/cruise/cruise-map",
     //tour
     addTour: "/tour/add-tour",
-    editTour: "/tour/edit-tour",
+    
     tourGrid: "/tour/tour-grid",
     tourList: "/tour/tour-list",
     tourMap: "/tour/tour-map",
@@ -64,7 +64,7 @@ export const all_routes = {
     agentListing:"/agent/agent-listings",
     editHotel: "/edit-hotel",
     editCar: "/edit-car",
-    editFlight: "/edit-flight",
+    editAppareil: "/agent/agent-AppareilEdit/:id",
     editCruise: "/edit-cruise",
     agentHotelBooking: "/agent/agent-hotel-booking",
     agentCarBooking: "/agent/agent-car-booking",
@@ -83,6 +83,7 @@ export const all_routes = {
     agentPlanSettings:"/agent/agent-plans-settings",
     agentPlan:"/agent/agent-plans",
     BookingTableByVille:'/agent/agent-bookingVille/:cityName',
+    editTour: "/agent/edit-tour/:id",
 
 
 

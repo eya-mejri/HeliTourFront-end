@@ -7,74 +7,77 @@ import { DatePicker } from 'antd';
 import axios from 'axios'; // Import axios for making API calls
 
 const AddAppareil = () => {
-  const [galleryItems, setGalleryItems] = useState<string[]>([]);
+    const [galleryItems, setGalleryItems] = useState<string[]>([]);
+    const [values, setValue] = useState<string>("");
+    const [appareilName, setAppareilName] = useState<string>("");
+    const [makeDate, setMakeDate] = useState<string>("");
 
-  const [values, setValue] = useState<string>("");
-  const [appareilName, setAppareilName] = useState<string>("");
-  const [makeDate, setMakeDate] = useState<string>("");
-
-
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAppareilName(e.target.value);
   };
 
-  const handleDateChange = (date: any, dateString: string | string[]) => {
-    if (typeof dateString === "string") {
-      setMakeDate(dateString);
-    } else if (Array.isArray(dateString) && dateString.length > 0) {
-      setMakeDate(dateString[0]);
-    }
-  };
-  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const newGalleryItems: string[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          if (event.target && event.target.result) {
-            newGalleryItems.push(event.target.result as string);
-            if (newGalleryItems.length === files.length) {
-              setGalleryItems((prevItems) => [...prevItems, ...newGalleryItems]);
-            }
-          }
-        };
-        reader.readAsDataURL(file); // Convert file to data URL
+    const handleDateChange = (date: any, dateString: string | string[]) => {
+      if (typeof dateString === "string") {
+        setMakeDate(dateString);
+      } else if (Array.isArray(dateString) && dateString.length > 0) {
+        setMakeDate(dateString[0]);
       }
-    }
-  };
-
-  // Remove a photo from the gallery
-  const removeGalleryItem = (index: number) => {
-    setGalleryItems((prevItems) => prevItems.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const formData = {
-      nom: appareilName,
-      date_de_creation: makeDate,
-      description: values,
-      photo: galleryItems, // Assuming galleryItems are URLs or file paths
     };
 
-    try {
-      const response = await axios.post("http://127.0.0.1:3000/appareil/add", formData);
-      console.log("Appareil added successfully:", response.data);
-      alert("Appareil added successfully!");
-      // Optionally reset the form
-      setAppareilName("");
-      setMakeDate("");
-      setValue("");
-      setGalleryItems([]);
-    } catch (error) {
-      console.error("Error adding appareil:", error);
-      alert("Failed to add appareil. Please try again.");
-    }
-  };
+    const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        const newGalleryItems: string[] = [];
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (event.target && event.target.result) {
+              newGalleryItems.push(event.target.result as string);
+              if (newGalleryItems.length === files.length) {
+                setGalleryItems((prevItems) => [...prevItems, ...newGalleryItems]);
+              }
+            }
+          };
+          reader.readAsDataURL(file); // Convert file to data URL
+        }
+      }
+    };
+
+    const removeGalleryItem = (index: number) => {
+      setGalleryItems((prevItems) => prevItems.filter((_, i) => i !== index));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append('nom', appareilName);
+      formData.append('date_de_creation', makeDate);
+      formData.append('description', values);
+      if (galleryItems.length > 0) {
+        const file = await fetch(galleryItems[0]).then((res) => res.blob());
+        formData.append('photo', file, `${appareilName}.jpg`);
+      }
+
+      try {
+        const response = await axios.post("http://127.0.0.1:3000/appareil/add", formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log("Appareil added successfully:", response.data);
+        alert("Appareil added successfully!");
+        // Optionally reset the form
+        setAppareilName("");
+        setMakeDate("");
+        setValue("");
+        setGalleryItems([]);
+      } catch (error) {
+        console.error("Error adding appareil:", error);
+        alert("Failed to add appareil. Please try again.");
+      }
+    };
 
   return (
     <form onSubmit={handleSubmit} data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true">

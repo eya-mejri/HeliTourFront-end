@@ -412,11 +412,7 @@ export const publicRoutes = [
     element: <FlightBookingConfirmation />,
     route: Route,
   },
-  {
-    path: routes.editFlight,
-    element: <EditFlight />,
-    route: Route,
-  },
+
   {
     path: routes.carDetails,
     element: <CarDetails />,
@@ -622,7 +618,11 @@ export const publicRoutes = [
     element: <BookingTableByVille />,
     route: Route,
   },
-
+  {
+    path: routes.editAppareil,
+    element: <EditFlight />,
+    route: Route,
+  },
 
 ];
 
