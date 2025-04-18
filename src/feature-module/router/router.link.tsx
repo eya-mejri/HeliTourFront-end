@@ -103,6 +103,14 @@ import HomeOneRTL from "../pages/rtl/home-one/homeOne";
 import ComingSoon from "../pages/coming-soon/comingSoon";
 import TermsConditions from "../pages/terms-conditions/termsConditions";
 import BookingTableByVille from "../Components/BookingTableByVille";
+import Profile from "../Components/Admin/Profile";
+import AddAdmin from "../Components/Admin/AddAdmin";
+import CountryCityForm from "../Components/Admin/form";
+import AdminRoute from "./AdminRoute";
+import Addappareil from "../Components/Appareil/add";
+import ListAppareil from "../Components/Appareil/ListAppareil";
+import Addvol from "../Components/Vol/add";
+
 const routes = all_routes;
 
 export const publicRoutes = [
@@ -559,18 +567,8 @@ export const publicRoutes = [
     route: Route,
   },
   {
-    path: routes.agentEarnings,
-    element: <AgentEarning />,
-    route: Route,
-  },
-  {
     path: routes.agentReview,
     element: <AgentReviews />,
-    route: Route,
-  },
-  {
-    path: routes.agentSettings,
-    element: <AgentSettings />,
     route: Route,
   },
   {
@@ -599,11 +597,6 @@ export const publicRoutes = [
     route: Route,
   },
   {
-    path: routes.agentNotification,
-    element: <AgentNotification />,
-    route: Route,
-  },
-  {
     path: routes.homeOneRtl,
     element: <HomeOneRTL />,
     route: Route,
@@ -613,17 +606,83 @@ export const publicRoutes = [
     element: <TermsConditions />,
     route: Route,
   },
-  {
+ /* {
     path: routes.BookingTableByVille,
     element: <BookingTableByVille />,
     route: Route,
-  },
+  },*/
   {
     path: routes.editAppareil,
     element: <EditFlight />,
     route: Route,
   },
+  {
+    path: routes.form,
+    element: <CountryCityForm />,
+    route: Route,
+  },
+  {
+    path: routes.AddAppareil,
+    element: <Addappareil />,
+    route: Route,
+  },
+  {
+    path: routes.Addvol,
+    element: <Addvol />,
+    route: Route,
+  },
+  {
+    path: routes.editvol,
+    element: <EditTour />,
+    route: Route,
+  },
+  {
+    path: routes.AllBooking,
+    element: <AgentHotelBooking />,
+    route: Route,
+  },
+  {
+    path: routes.agentEarnings,
+    element: <AgentEarning />,
+    route: Route,
+  },
+  {
+    path: routes.Profile,
+    element: <Profile />,
+    route: Route,
+  },
+  {
+    path: routes.AddAdmin,
+    element: <AddAdmin />,
+    route: Route,
+  },
+  {
+    path: routes.agentSettings,
+    element: <AgentSettings />,
+    route: Route,
+  },
+  {
+    path: routes.agentNotification,
+    element: <AgentNotification />,
+    route: Route,
+  },
+  
 
+];
+
+
+export const adminRoutes = [
+  {
+    path: 'admin',
+    element: <AdminRoute />,
+    children: [
+      {
+        path:  'booking/agent-bookingVille/:cityName',
+        element: <BookingTableByVille/>,
+      },
+      // ... other admin-only routes
+    ],
+  },
 ];
 
 export const authRoutes = [

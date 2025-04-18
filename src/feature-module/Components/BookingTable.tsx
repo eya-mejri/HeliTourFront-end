@@ -1,154 +1,304 @@
-import Table, { ColumnsType } from "antd/es/table";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+
+import { Link } from 'react-router-dom';
+import { Table } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import moment from 'moment';
+
+import axios from 'axios';
+import { all_routes } from '../router/all_routes';
+import PredefinedDateRanges from './PredefinedDateRanges';
+import PredefinedDateRangesBefore from './PredefinedDateRangesBefore';
 
 interface Reservation {
-    _id: string; // reservationId is mapped from _id
+    _id: string;
     Num_Reservation: string;
-    reservationDate: string;
+    Date_Reservation: string;
+    volDate: string;
+    nbr_place: number;
+    Status: string;
     circuitName: string;
-    numberOfVoyageurs: number;
-    reservationStatus: string;
-    paiement: Array<Array<{
-      _id: string;
-      reservation_id: string;
-      montant: number;
-      devise: string;
-      statut: string;
-      date_paiement: string;
-      __v: number;
-    }>>;
-  }
-  
-  interface TableData {
+    voyageurEmails: string[];
+    totalPrice: number;
+    paiementStatus?: string;
+}
+
+interface TableData {
     key: string;
-    reservationId: string;
     numReservation: string;
     circuitName: string;
-    numberOfVoyageurs: string;
+    nbr_place: string;
+    voyageurEmails: string;
     reservationDate: string;
-    reservationStatus: string;
-    pricing: string;
+    volDate: string;
+    status: string;
+    totalPrice: string;
     paymentStatus: string;
-  }
-const BookingTable =(props: { numPage: any; })=>{
-    const [reservations, setReservations] = useState<Reservation[]>([]); // State to store fetched data
-  const [loading, setLoading] = useState<boolean>(true); // State to handle loading state
-
-  // Fetch data from the API
-  useEffect(() => {
-    const fetchReservations = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:3000/reservation/getReservationsWithDetails");
-        if (!response.ok) {
-          throw new Error("Failed to fetch reservations");
-        }
-        const data = await response.json();
-        setReservations(data); // Store fetched data in state
-      } catch (error) {
-        console.error("Error fetching reservations:", error);
-      } finally {
-        setLoading(false); // Set loading to false after fetching
-      }
-    };
-
-    fetchReservations();
-  }, []);
-
-  // Transform the fetched data to match the table's expected structure
-  const transformedData: TableData[] = reservations.map((reservation) => {
-    // Extract payment details (if available)
-    const payment = reservation.paiement?.[0]?.[0]; // Get the first payment record
-    const paymentAmount = payment?.montant || 0; // Default to 0 if no payment
-    const paymentCurrency = payment?.devise || "N/A"; // Default to "N/A" if no payment
-    const paymentStatus = payment?.statut || "N/A"; // Default to "N/A" if no payment
-  
-    return {
-      key: reservation._id, // Use _id as the key
-      numReservation: reservation.Num_Reservation,
-      reservationId: reservation._id, // Use _id as reservationId
-      circuitName: reservation.circuitName,
-      numberOfVoyageurs: `${reservation.numberOfVoyageurs} Voyageurs`, // Format numberOfVoyageurs
-      reservationDate: new Date(reservation.reservationDate).toLocaleDateString(), // Format reservationDate
-      reservationStatus: reservation.reservationStatus,
-      pricing: `${paymentAmount} ${paymentCurrency}`, // Format pricing
-      paymentStatus: paymentStatus, // Include payment status
-    };
-  });
-
-  // Define the columns for the table
-  const columns: ColumnsType<TableData> = [
-    {
-      title: "ID",
-      dataIndex: "numReservation",
-      key: "numReservation",
-      render: (text: string) => (
-        <Link
-          to="#"
-          className="link-primary fw-medium"
-          data-bs-toggle="modal"
-          data-bs-target={`#${text}`}
-        >
-          {text}
-        </Link>
-      ),
-    },
-    {
-      title: "Circuit Name",
-      dataIndex: "circuitName",
-      key: "circuitName",
-    },
-    {
-      title: "Number of Voyageurs",
-      dataIndex: "numberOfVoyageurs",
-      key: "numberOfVoyageurs",
-    },
-    {
-      title: "Reservation Date",
-      dataIndex: "reservationDate",
-      key: "reservationDate",
-    },
-    {
-      title: "Status",
-      dataIndex: "paymentStatus",
-      key: "paymentStatus",
-      render: (text: string) => (
-        <span
-          className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${
-            text === "réussi"
-              ? "badge-success"
-              : text === "en_attente"
-              ? "badge-warning"
-              : text === "échoué"
-              ? "badge-danger"
-              : ""
-          }`}
-        >
-          <i className="fa-solid fa-circle fs-5 me-1" />
-          {text}
-        </span>
-      ),
-    },
-    {
-      title: "Pricing",
-      dataIndex: "pricing",
-      key: "pricing",
-    },
-  ];
-  
-    return(
-        <>
-        <Table
-                    columns={columns}
-                    dataSource={transformedData}
-                    loading={loading}
-                    pagination={{
-                      pageSize:props.numPage , // Show 5 items per page
-                      showSizeChanger: true, // Allow changing page size
-                      pageSizeOptions: ["5", "10", "20", "30"], // Options for page size
-                    }}
-                  />
-        </>
-    )
 }
+
+const BookingTable = (props: { numPage: any }) => {
+    const routes = all_routes;
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [selectedRange, setSelectedRange] = useState<{ 
+        startDate: moment.Moment | null, 
+        endDate: moment.Moment | null 
+    }>({ 
+        startDate: null, 
+        endDate: null 
+    });
+    const [statusFilter, setStatusFilter] = useState<string | null>(null);
+    const [searchEmail, setSearchEmail] = useState<string>("");
+
+    useEffect(() => {
+        const fetchReservations = async () => {
+            try {
+                setLoading(true);
+                let url = 'http://127.0.0.1:3000/reservation/getReservationsWithDetails';
+                const params: any = {};
+                
+                if (selectedRange.startDate && selectedRange.endDate) {
+                    params.startDate = selectedRange.startDate.toISOString();
+                    params.endDate = selectedRange.endDate.toISOString();
+                }
+                
+                if (statusFilter) {
+                    params.status = statusFilter;
+                }
+                
+                if (searchEmail) {
+                    params.searchEmail = searchEmail;
+                }
+                
+                const response = await axios.get(url, { params });
+                setReservations(response.data);
+            } catch (error) {
+                console.error('Error fetching reservations:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchReservations();
+    }, [selectedRange, statusFilter, searchEmail]);
+
+    const handleDateChange = (start: moment.Moment, end: moment.Moment) => {
+        setSelectedRange({ startDate: start, endDate: end });
+    };
+
+    const handleStatusChange = (status: string | null) => {
+        setStatusFilter(status);
+    };
+
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchEmail(e.target.value);
+    };
+
+    const transformedData: TableData[] = reservations.map((reservation) => ({
+        key: reservation._id,
+        numReservation: reservation.Num_Reservation,
+        circuitName: reservation.circuitName,
+        nbr_place: `${reservation.nbr_place} place${reservation.nbr_place > 1 ? 's' : ''}`,
+        voyageurEmails: reservation.voyageurEmails.join(', '),
+        reservationDate: new Date(reservation.Date_Reservation).toLocaleDateString(),
+        volDate: new Date(reservation.volDate).toLocaleDateString(),
+        status: reservation.Status,
+        totalPrice: `${reservation.totalPrice} TND`,
+        paymentStatus: reservation.paiementStatus || "N/A"
+    }));
+
+    const columns: ColumnsType<TableData> = [
+        {
+            title: "Reservation ID",
+            dataIndex: "numReservation",
+            key: "numReservation",
+            render: (text: string) => (
+                <Link to="#" className="link-primary fw-medium">
+                    {text}
+                </Link>
+            ),
+        },
+        {
+            title: "Circuit",
+            dataIndex: "circuitName",
+            key: "circuitName",
+        },
+        {
+            title: "Places",
+            dataIndex: "nbr_place",
+            key: "nbr_place",
+        },
+        {
+            title: "Voyageurs",
+            dataIndex: "voyageurEmails",
+            key: "voyageurEmails",
+            render: (emails: string) => (
+                <span className="text-truncate" style={{ maxWidth: '150px' }} title={emails}>
+                    {emails}
+                </span>
+            ),
+        },
+        {
+            title: "Reservation Date",
+            dataIndex: "reservationDate",
+            key: "reservationDate",
+        },
+        {
+            title: "Flight Date",
+            dataIndex: "volDate",
+            key: "volDate",
+        },
+        {
+            title: "Status",
+            dataIndex: "status",
+            key: "status",
+            render: (text: string) => (
+                <span className={`badge rounded-pill ${
+                    text === "confirmé" ? "bg-success" :
+                    text === "annulé" ? "bg-danger" : "bg-warning"
+                }`}>
+                    {text}
+                </span>
+            ),
+        },
+        {
+            title: "Total Price",
+            dataIndex: "totalPrice",
+            key: "totalPrice",
+        },
+    ];
+
+    return (
+        <div className="col">
+            {/* Booking Header */}
+            <div className="card booking-header border-0">
+                <div className="card-body header-content d-flex align-items-center justify-content-between flex-wrap">
+                    <div>
+                        <h6 className="mb-1">All Bookings</h6>
+                        <p className="fs-14 text-gray-6 fw-normal">
+                            All Booking: {reservations.length}
+                        </p>
+                    </div>
+                    <div className="d-flex align-items-center flex-wrap">
+                        <div className="input-icon-start position-relative">
+                            <span className="icon-addon">
+                                <i className="isax isax-calendar-edit fs-14" />
+                            </span>
+                            <PredefinedDateRangesBefore onDateChange={handleDateChange} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Hotel-Booking List */}
+            <div className="card hotel-list">
+                <div className="card-body p-0">
+                    <div className="list-header d-flex align-items-center justify-content-between flex-wrap">
+                        <h6>Booking List</h6>
+                        <div className="d-flex align-items-center flex-wrap">
+                            <div className="input-icon-start me-2 position-relative">
+                                <span className="icon-addon">
+                                    <i className="isax isax-search-normal-1 fs-14" />
+                                </span>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Search by email"
+                                    value={searchEmail}
+                                    onChange={handleSearch}
+                                />
+                            </div>
+                            
+                            <div className="dropdown me-3" style={{ position: 'relative' }}>
+                              <button
+                                  className="btn btn-secondary dropdown-toggle"
+                                  type="button"
+                                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                              >
+                                  {statusFilter ? 
+                                      (statusFilter === "confirmé" ? "Confirmed" : 
+                                      statusFilter === "annulé" ? "Cancelled" : "Status") 
+                                      : "Status"}
+                              </button>
+                              {dropdownOpen && (
+                                  <ul 
+                                      className="dropdown-menu show"
+                                      style={{
+                                          position: 'absolute',
+                                          inset: '0px auto auto 0px',
+                                          margin: '0px',
+                                          transform: 'translate(0px, 40px)'
+                                      }}
+                                  >
+                                      <li>
+                                          <button 
+                                              className="dropdown-item" 
+                                              onClick={() => {
+                                                  handleStatusChange("confirmé");
+                                                  setDropdownOpen(false);
+                                              }}
+                                          >
+                                              Confirmed
+                                          </button>
+                                      </li>
+                                      <li>
+                                          <button 
+                                              className="dropdown-item" 
+                                              onClick={() => {
+                                                  handleStatusChange("annulé");
+                                                  setDropdownOpen(false);
+                                              }}
+                                          >
+                                              Cancelled
+                                          </button>
+                                      </li>
+                                      <li>
+                                          <button 
+                                              className="dropdown-item" 
+                                              onClick={() => {
+                                                  handleStatusChange("en attente");
+                                                  setDropdownOpen(false);
+                                              }}
+                                          >
+                                              tending
+                                          </button>
+                                      </li>
+                                      <li>
+                                          <button 
+                                              className="dropdown-item" 
+                                              onClick={() => {
+                                                  handleStatusChange(null);
+                                                  setDropdownOpen(false);
+                                              }}
+                                          >
+                                              All Statuses
+                                          </button>
+                                      </li>
+                                  </ul>
+                              )}
+                          </div>
+                        </div>
+                    </div>
+                    
+                    {/* Hotel List */}
+                    <Table
+                        columns={columns}
+                        dataSource={transformedData}
+                        loading={loading}
+                        pagination={{
+                            pageSize: props.numPage,
+                            showSizeChanger: false,
+                            pageSizeOptions: ["5", "10", "20", "30"],
+                        }}
+                        scroll={{ x: true }}
+                        
+                        
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default BookingTable;

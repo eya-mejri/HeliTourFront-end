@@ -144,7 +144,7 @@ const VolListing = () => {
             key: 'volId',
             render: (text: string) => (
                 <Link
-                    to={`/agent/edit-tour/${text}`} // Link to edit page with volId
+                    to={`/vol/edit-vol/${text}`} // Link to edit page with volId
                     className="link-primary fw-medium"
                 >
                     {text}
@@ -207,7 +207,7 @@ const VolListing = () => {
                     </div>
                     <div>
                         <Link
-                            to={routes.addTour}
+                            to={routes.Addvol}
                             className="btn btn-primary d-inline-flex align-items-center me-0"
                         >
                             <i className="isax isax-add me-1 fs-16" />

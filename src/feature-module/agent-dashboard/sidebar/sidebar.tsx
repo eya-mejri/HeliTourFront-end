@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { all_routes } from '../../../feature-module/router/all_routes';
 import { Link, useLocation } from 'react-router-dom';
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
+import NotiIcon from '../../Components/Admin/NotiIcon';
+import ProfileCard from '../../Components/Admin/ProfileCard';
+import { Logout } from './LogoutModel';
+
 
 interface Ville {
   _id: string;
@@ -49,39 +53,7 @@ const Sidebar = () => {
     <div>
       {/* Sidebar */}
       <div className="card user-sidebar agent-sidebar mb-4 mb-lg-0 theiaStickySidebar">
-        <div className="card-header user-sidebar-header text-center bg-gray-transparent">
-          <div className="agent-profile d-inline-flex">
-            <ImageWithBasePath
-              src="assets/img/users/user-43.jpg"
-              alt="image"
-              className="img-fluid rounded-circle"
-            />
-            <Link
-              to={routes.agentSettings}
-              className="avatar avatar-sm rounded-circle btn btn-primary d-flex align-items-center justify-content-center p-0"
-            >
-              <i className="isax isax-edit-2 fs-14" />
-            </Link>
-          </div>
-          <h6 className="fs-16">Chris Foxy</h6>
-          <p className="fs-14 mb-2">Member Since 10 May 2025</p>
-          <div className="d-flex align-items-center justify-content-center notify-item">
-            <Link
-              to={routes.agentNotification}
-              className="rounded-circle btn btn-white d-flex align-items-center justify-content-center p-0 me-2 position-relative"
-            >
-              <i className="isax isax-notification-bing5 fs-20" />
-              <span className="position-absolute p-1 bg-secondary rounded-circle" />
-            </Link>
-            <Link
-              to={routes.agentChat}
-              className="rounded-circle btn btn-white d-flex align-items-center justify-content-center p-0 position-relative"
-            >
-              <i className="isax isax-message-square5 fs-20" />
-              <span className="position-absolute p-1 bg-danger rounded-circle" />
-            </Link>
-          </div>
-        </div>
+        <ProfileCard/>
         <div className="card-body user-sidebar-body">
           <ul>
             <li>
@@ -111,7 +83,7 @@ const Sidebar = () => {
               </Link>
               <ul className={`${subdroptoggle && 'd-block'}`}>
               <li >
-              <Link to={routes.agentHotelBooking} className={`d-flex align-items-center ${location.pathname === routes.agentEarnings && 'active'}`}>
+              <Link to={routes.AllBooking} className={`d-flex align-items-center ${location.pathname === routes.agentEarnings && 'active'}`}>
                 <i className="isax isax-wallet-add-15 me-2" />
                 All Bookings 
               </Link>
@@ -119,7 +91,7 @@ const Sidebar = () => {
                 {villes.map((ville) => (
                   <li key={ville._id}>
                     <Link
-                      to={`/agent/agent-bookingVille/${ville.Nom}`}
+                      to={`/admin/booking/agent-bookingVille/${ville.Nom}`}
                       className={`fs-14 d-inline-flex align-items-center ${location.pathname.includes(ville.Nom.toLowerCase()) ? 'active' : ''}`}
                     >
                       {ville.Nom}
@@ -131,7 +103,7 @@ const Sidebar = () => {
             <li>
               <Link to={routes.agentEnquirers} className={`d-flex align-items-center ${location.pathname === routes.agentEnquirers && 'active'}`}>
                 <i className="isax isax-magic-star5 me-2" />
-                Enquiries
+                Users
               </Link>
             </li>
             <li>
@@ -140,25 +112,37 @@ const Sidebar = () => {
                 Earnings
               </Link>
             </li>
-            <li>
+            {/*<li>
               <Link to={routes.agentReview} className={`d-flex align-items-center ${location.pathname === routes.agentReview && 'active'}`}>
                 <i className="isax isax-magic-star5 me-2" />
                 Reviews
               </Link>
-            </li>
+            </li>*/}
             <li>
-              <Link to={routes.agentSettings} className={`d-flex align-items-center ${location.pathname.includes('settings') ? 'active' : ''}`}>
+              <Link to={routes.Profile} className={`d-flex align-items-center ${location.pathname.includes('setting') ? 'active' : ''}`}>
                 <i className="isax isax-setting-25" /> Settings
               </Link>
             </li>
             <li className="logout-link">
-              <Link to={routes.home1} className="d-flex align-items-center pb-0">
+              {/*<Link to={routes.home1} className="d-flex align-items-center pb-0">
                 <i className="isax isax-logout-15" /> Logout
+              </Link>*/}
+              <Link
+                  to="#"
+                  className="d-flex align-items-center pb-0"
+                  data-bs-toggle="modal"
+                  data-bs-target="#logout_modal"
+              >
+                <i className="isax isax-logout-15" />
+                Logout
               </Link>
+              
             </li>
+            
           </ul>
         </div>
       </div>
+      <Logout/>
 
       {/* /Sidebar */}
     </div>

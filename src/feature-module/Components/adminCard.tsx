@@ -1,6 +1,8 @@
 import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal } from "react"
 
 const AdminCard = (props: {
+  per: ReactNode;
+  status: any;
     class2: any;
     class: any; title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; value: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined 
 }) => {
@@ -14,8 +16,8 @@ const AdminCard = (props: {
                       <p className="mb-1">{props.title}</p>
                       <h5 className="mb-2">{props.value}</h5>
                       <p className="d-flex align-items-center justify-content-center fs-14">
-                        <i className="isax isax-arrow-up-15 me-1 text-success" />
-                        20% From Last Month{" "}
+                        <i className={`isax isax-arrow-${props.status}-15 me-1 text-success`} />
+                        {props.per}% From Last Month{" "}
                       </p>
                     </div>
                   </div>

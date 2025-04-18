@@ -1,17 +1,48 @@
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import ImageWithBasePath from '../../../core/common/imageWithBasePath'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import { all_routes } from '../../router/all_routes';
+import { useAuth } from '../../agent-dashboard/sidebar/AuthContext';
+// Import the auth context
 
 const Login = () => {
-
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const routes = all_routes;
 
   const togglePasswordVisibility = () => {
     setPasswordVisible((prevState) => !prevState);
   };
 
-const routes = all_routes;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await login({ 
+        Email: email, 
+        MDP: password 
+      });
+
+      if (result.success) {
+        navigate(routes.home1); // Redirect to home on successful login
+      } else {
+        setError(result.error || 'Login failed'); 
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="w-100 overflow-hidden position-relative flex-wrap d-block vh-100">
@@ -28,7 +59,12 @@ const routes = all_routes;
               </div>
             </div>
             <div className="card-body">
-              <form>
+              {error && (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              )}
+              <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label className="form-label">Email</label>
                   <div className="input-icon">
@@ -39,6 +75,9 @@ const routes = all_routes;
                       type="email"
                       className="form-control form-control-lg"
                       placeholder="Enter Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -51,11 +90,13 @@ const routes = all_routes;
                     <input
                       type={isPasswordVisible ? "text" : "password"}
                       className="pass-input form-control"
-                       placeholder='Enter Password'
+                      placeholder="Enter Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
                     />
                     <span
-                      className={`isax toggle-password ${isPasswordVisible ? "isax-eye" : "isax-eye-slash"
-                        }`}
+                      className={`isax toggle-password ${isPasswordVisible ? "isax-eye" : "isax-eye-slash"}`}
                       onClick={togglePasswordVisibility}
                     />
                   </div>
@@ -66,7 +107,8 @@ const routes = all_routes;
                       <input
                         className="form-check-input mt-0"
                         type="checkbox"
-                        defaultValue=""
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
                         id="remembers_me"
                       />
                       <label
@@ -85,13 +127,23 @@ const routes = all_routes;
                   </div>
                 </div>
                 <div className="mb-3">
-                  <Link to={routes.home1}
+                  <button
                     type="submit"
                     className="btn btn-xl btn-primary d-flex align-items-center justify-content-center w-100"
+                    disabled={loading}
                   >
-                    Login
-                    <i className="isax isax-arrow-right-3 ms-2" />
-                  </Link>
+                    {loading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Logging in...
+                      </>
+                    ) : (
+                      <>
+                        Login
+                        <i className="isax isax-arrow-right-3 ms-2" />
+                      </>
+                    )}
+                  </button>
                 </div>
                 <div className="login-or mb-3">
                   <span className="span-or">Or</span>
@@ -134,8 +186,7 @@ const routes = all_routes;
         </div>
       </div>
     </div>
+  );
+};
 
-  )
-}
-
-export default Login
+export default Login;

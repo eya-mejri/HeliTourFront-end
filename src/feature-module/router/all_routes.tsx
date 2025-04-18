@@ -1,3 +1,6 @@
+import AddVol from "../Components/Vol/AddVol";
+import Dashboard from "../userDashboard/dashboard/dashboard";
+
 
 export const all_routes = {
     //Home
@@ -60,11 +63,11 @@ export const all_routes = {
     tourBookingConfirmation: "/tour/tour-booking-confirmation",
     tourDetails: "/tour/tour-details",
     //Agent 
-    agentDashboard: "/agent/agent-dashboard",
-    agentListing:"/agent/agent-listings",
+    /*agentDashboard: "/agent/agent-dashboard",*/
+    /*agentListing:"/agent/agent-listings",*/
     editHotel: "/edit-hotel",
     editCar: "/edit-car",
-    editAppareil: "/agent/agent-AppareilEdit/:id",
+    /*editAppareil: "/agent/agent-AppareilEdit/:id",*/
     editCruise: "/edit-cruise",
     agentHotelBooking: "/agent/agent-hotel-booking",
     agentCarBooking: "/agent/agent-car-booking",
@@ -72,18 +75,21 @@ export const all_routes = {
     agentTourBooking: "/agent/agent-tour-booking",
     agentFlightBooking: "/agent/agent-flight-booking",
     agentEnquirers: "/agent/agent-enquirers",
-    agentEarnings: "/agent/agent-earnings",
+    /*agentEarnings: "/agent/agent-earnings",*/
     agentReview: "/agent/agent-review",
-    agentSettings: "/agent/agent-settings",
-    agentNotification:"/agent/agent-notifications",
+    /*agentSettings: "/agent/agent-settings",*/
+    /*agentNotification:"/agent/agent-notifications",*/
     agentChat:"/agent/agent-chat",
     agentEnquiriesDetails:"/agent/agent-enquiry-details",
     agentAccountSettings:"/agent/agent-account-settings",
     agentSecuritySettings:"/agent/agent-security-settings",
     agentPlanSettings:"/agent/agent-plans-settings",
     agentPlan:"/agent/agent-plans",
-    BookingTableByVille:'/agent/agent-bookingVille/:cityName',
+    /*BookingTableByVille:'/admin/agent/agent-bookingVille/:cityName',*/
     editTour: "/agent/edit-tour/:id",
+    
+    form: "/form",
+    
 
 
 
@@ -138,4 +144,30 @@ export const all_routes = {
     underMaintenance: "/pages/under-maintenance",
     homeOneRtl: "/pages/rtl",
     comingSoon: "/pages/coming-soon",
+    //admin 
+    agentDashboard: "/agent/agent-dashboard",
+    agentListing:"/agent/agent-listings",
+    //Appareil
+    AddAppareil:"/appareil/AddAppareil",
+    editAppareil: "/agent/agent-AppareilEdit/:id",
+    //Vol
+    Addvol: "/vol/AddVol",
+    editvol: "/vol/edit-vol/:id",
+
+
+    //booking
+    AllBooking: "/booking/all-booking",
+    BookingTableByVille:'/admin/booking/agent-bookingVille/:cityName',
+    //paiement 
+    agentEarnings: "/paiement/agent-paiement",
+    
+    //setting
+    Profile: "/setting/profile",
+    AddAdmin: "/setting/Add-Admin",
+    //edit 
+    agentSettings: "/setting/agent-settings",
+    /*ListAppareil:"/appareil/ListAppareil",*/
+    //noti
+    agentNotification:"/agent/agent-notifications",
+   
 };

@@ -7,6 +7,10 @@ const BookingStat = () => {
   const [villeBookings, setVilleBookings] = useState<{ name: string; count: number; color: string }[]>([]);
   const [circuitBookings, setCircuitBookings] = useState<{ name: string; count: number; color: string }[]>([]);
   const [selectedVille, setSelectedVille] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Add this state
+
+
+
   const [donutChart, setDonutChart] = useState<any>({
     series: [],
     options: {
@@ -147,42 +151,58 @@ const BookingStat = () => {
       },
     }));
   };
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!(event.target as Element).closest('.dropdown')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
 
   return (
     <div className="card shadow-none flex-fill">
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h6>{selectedVille ? `Bookings for ${selectedVille}` : 'Bookings Statistics'}</h6>
-          <div className="dropdown">
-            <Link
-              to="#"
+          {/*<div className="dropdown">
+            <button
               className="dropdown-toggle btn bg-light-200 btn-sm text-gray-6 rounded-pill fw-normal fs-14 d-inline-flex align-items-center"
-              data-bs-toggle="dropdown"
+              onClick={toggleDropdown}
             >
               <i className="isax isax-calendar-2 me-2 fs-14 text-gray-6" />
               2025
-            </Link>
-            <ul className="dropdown-menu dropdown-menu-end p-3">
+            </button>
+            <ul className={`dropdown-menu dropdown-menu-end p-3 ${isDropdownOpen ? 'show' : ''}`}>
               <li>
-                <Link to="#" className="dropdown-item rounded-1">
+                <Link to="#" className="dropdown-item rounded-1" onClick={() => setIsDropdownOpen(false)}>
                   <i className="ti ti-point-filled me-1" />
                   2025
                 </Link>
               </li>
               <li>
-                <Link to="#" className="dropdown-item rounded-1">
+                <Link to="#" className="dropdown-item rounded-1" onClick={() => setIsDropdownOpen(false)}>
                   <i className="ti ti-point-filled me-1" />
                   2024
                 </Link>
               </li>
               <li>
-                <Link to="#" className="dropdown-item rounded-1">
+                <Link to="#" className="dropdown-item rounded-1" onClick={() => setIsDropdownOpen(false)}>
                   <i className="ti ti-point-filled me-1" />
                   2023
                 </Link>
               </li>
             </ul>
-          </div>
+          </div>*/}
+          This year 
         </div>
         <div className="text-center mb-3">
           <div id="booking-chart">
@@ -198,7 +218,7 @@ const BookingStat = () => {
           {/* Back button (conditionally rendered) */}
           {selectedVille && (
             <button
-              className="btn btn-secondary mb-3"
+              className="btn rebook-btn btn-md mb-5"
               onClick={handleBackClick}
             >
               Back to Villes
@@ -225,3 +245,4 @@ const BookingStat = () => {
 };
 
 export default BookingStat;
+

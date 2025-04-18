@@ -11,7 +11,10 @@ const EditVol = (props: { vol_id: any }) => {
     const [status, setStatus] = useState<string>('confirmé');
     const [circuits, setCircuits] = useState<any[]>([]); // To store the list of circuits
     const [selectedCircuitId, setSelectedCircuitId] = useState<string>(''); // To store the selected circuit ID
-
+    const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+    const [loadingTimes, setLoadingTimes] = useState<boolean>(false);
+    const [selectedDate, setSelectedDate] = useState<string>('');
+    const [selectedTime, setSelectedTime] = useState<string>('');
     const { vol_id } = props; // Get the vol ID from props
 
     // Fetch existing vol data
@@ -48,7 +51,69 @@ const EditVol = (props: { vol_id: any }) => {
 
         fetchCircuits();
     }, []); // Run only once on component mount
+     // Fetch booked times when both circuit and date are selected
+     useEffect(() => {
+        if (selectedCircuitId && selectedDate) {
+            const fetchBookedTimes = async () => {
+                setLoadingTimes(true);
+                try {
+                    const response = await axios.get(
+                        `http://127.0.0.1:3000/vol/circuit-date/${selectedCircuitId}/${selectedDate}`
+                    );
+                    
+                    // Exclude the current vol's time from booked times
+                    const times = response.data
+                        .filter((vol: any) => vol._id !== vol_id)
+                        .map((vol: any) => {
+                            const utcDate = moment.utc(vol.Date_depart);
+                            return utcDate.format('HH:mm');
+                        });
+                    
+                    setBookedTimes(times);
+                } catch (error) {
+                    console.error('Error fetching booked times:', error);
+                    setBookedTimes([]);
+                } finally {
+                    setLoadingTimes(false);
+                }
+            };
+            fetchBookedTimes();
+        } else {
+            setBookedTimes([]);
+        }
+    }, [selectedCircuitId, selectedDate, vol_id]);
 
+    const handleDateChange = (date: moment.Moment | null) => {
+        if (date) {
+            const dateString = date.format('YYYY-MM-DD');
+            setSelectedDate(dateString);
+            // Don't reset time when editing existing vol
+        } else {
+            setSelectedDate('');
+            setSelectedTime('');
+        }
+    };
+
+    const generateTimeSlots = () => {
+        const slots = [];
+        for (let hour = 0; hour < 24; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) {
+                const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                const isBooked = bookedTimes.includes(time) && time !== selectedTime;
+                slots.push(
+                    <option 
+                        key={time} 
+                        value={time}
+                        disabled={isBooked}
+                        style={isBooked ? { color: '#ccc' } : {}}
+                    >
+                        {time}{isBooked ? ' (Indisponible)' : ''}
+                    </option>
+                );
+            }
+        }
+        return slots;
+    };
     // Handle form field changes
     const handleDureeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setDuree(Number(e.target.value));
@@ -106,6 +171,9 @@ const EditVol = (props: { vol_id: any }) => {
             setPlaceDisponible(data.place_disponible);
             setStatus(data.status);
             setSelectedCircuitId(data.circuitId);
+            const dateTime = moment(data.Date_depart);
+            setSelectedDate(dateTime.format('YYYY-MM-DD'));
+            setSelectedTime(dateTime.format('HH:mm'));
         } catch (error) {
             console.error('Error resetting form:', error);
         }
@@ -113,6 +181,47 @@ const EditVol = (props: { vol_id: any }) => {
 
     return (
        <form onSubmit={handleSubmit} data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true">
+                   <div className="card shadow-none" id="date_depart">
+                <div className="card-header">
+                    <div className="d-flex align-items-center justify-content-between">
+                        <h6 className="fs-18">Date de départ</h6>
+                    </div>
+                </div>
+                <div className="card-body pb-1">
+                    <div className="row">
+                        <div className="col-md-6">
+                            <div className="mb-3">
+                                <label className="form-label">Date</label>
+                                <DatePicker
+                                    className="form-control"
+                                    format="DD/MM/YYYY"
+                                    onChange={handleDateChange}
+                                    value={selectedDate ? moment(selectedDate) : null}
+                                    disabledDate={(current) => {
+                                        return current && current < moment().startOf('day');
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <div className="mb-3">
+                                <label className="form-label">Heure</label>
+                                <select
+                                    className="form-control"
+                                    value={selectedTime}
+                                    onChange={(e) => setSelectedTime(e.target.value)}
+                                    disabled={!selectedDate || loadingTimes}
+                                    required
+                                >
+                                    <option value="">Sélectionnez une heure</option>
+                                    {selectedDate && generateTimeSlots()}
+                                </select>
+                                {loadingTimes && <small>Chargement des horaires...</small>}
+                            </div>
+                        </div>
+                    </div>  
+                </div>   
+            </div>
                    {/* Basic Info Card */}
                    <div className="card shadow-none" id="Duree">
                        <div className="card-header">
@@ -142,37 +251,7 @@ const EditVol = (props: { vol_id: any }) => {
                    </div>
        
                {/*date depart  */}
-               <div className="card shadow-none" id="date_depart">
-                       <div className="card-header">
-                           <div className="d-flex align-items-center justify-content-between">
-                               <h6 className="fs-18">Date de départ</h6>
-                           </div>
-                       </div>
-                       <div className="card-body pb-1">
-                           <div className="row">
-                               {/* Duree */}
-                               <div className="col-md-6">
-                                   <div className="mb-3">
-                                       <label className="form-label">Date de départ</label>
-                                       <div className="input-icon-end position-relative">
-                                           <DatePicker
-                                               className="form-control datetimepicker"
-                                               placeholder={dateDepart}
-                                               onChange={handleDateDepartChange}
-                                               showTime={{ format: 'HH:mm' }} // Add time picker
-                                               required
-                                           />
-                                           <span className="input-icon-addon">
-                                               <i className="isax isax-calendar" />
-                                           </span>
-                                       </div>
-                                   </div>
-                               </div>
-       
-                               {/* Date_depart */}
-                           </div>  
-                       </div>   
-                </div>
+               
        
        
                  {/* place_disponible */}

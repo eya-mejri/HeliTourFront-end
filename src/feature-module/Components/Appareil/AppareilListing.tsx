@@ -3,6 +3,8 @@ import { all_routes } from '../../router/all_routes';
 import { Link } from 'react-router-dom';
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import axios from 'axios';
+import AgentListingModal from './ModalAppareil';
+
 
 // Define the Appareil interface
 interface Appareil {
@@ -11,28 +13,35 @@ interface Appareil {
     date_de_creation: string;
     photo: string;
     description: string;
+    status: string;
     __v: number;
 }
 
 const AppareilListing = () => {
     const routes = all_routes;
-    const [appareils, setAppareils] = useState<Appareil[]>([]); // Use the Appareil interface
-    const [currentPage, setCurrentPage] = useState(1); // Track the current page
-    const [itemsPerPage] = useState(6); // Number of items per page
+    const [appareils, setAppareils] = useState<Appareil[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(6);
+    const [selectedAppareilId, setSelectedAppareilId] = useState<string | null>(null);
 
     // Fetch appareils from the backend
-    useEffect(() => {
-        const fetchAppareils = async () => {
-            try {
-                const response = await axios.get<Appareil[]>('http://127.0.0.1:3000/appareil/getall');
-                setAppareils(response.data); // Set the fetched data to state
-            } catch (error) {
-                console.error('Error fetching appareils:', error);
-            }
-        };
+    const fetchAppareils = async () => {
+        try {
+            const response = await axios.get<Appareil[]>('http://127.0.0.1:3000/appareil/getAll');
+            setAppareils(response.data);
+        } catch (error) {
+            console.error('Error fetching appareils:', error);
+        }
+    };
 
+    useEffect(() => {
         fetchAppareils();
     }, []);
+
+    // Call this when you need to refresh the list
+    const refreshList = () => {
+        fetchAppareils();
+    };
 
     // Calculate the indexes for slicing the appareils array
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -61,7 +70,7 @@ const AppareilListing = () => {
                     </div>
                     <div>
                         <Link
-                            to={routes.addFlight}
+                            to={routes.AddAppareil}
                             className="btn btn-primary d-inline-flex align-items-center me-0"
                         >
                             <i className="isax isax-add me-1 fs-16" />
@@ -95,6 +104,7 @@ const AppareilListing = () => {
                                         className="d-inline-flex align-items-center justify-content-center"
                                         data-bs-toggle="modal"
                                         data-bs-target="#delete-list"
+                                        onClick={() => setSelectedAppareilId(appareil._id)}
                                     >
                                         <i className="isax isax-trash" />
                                     </Link>
@@ -107,12 +117,14 @@ const AppareilListing = () => {
                                 <div className="d-flex align-items-center justify-content-between border-top pt-3">
                                     <div className="d-flex align-items-center lh-1">
                                         <Link
-                                            to="#inactive_list"
-                                            data-bs-toggle="modal"
+                                            to="#"
+                                            data-bs-toggle={appareil.status === 'active' ? 'modal' : ''}
+                                            data-bs-target={appareil.status === 'active' ? '#inactive_list' : '#active_list'}
                                             className="d-flex align-items-center"
+                                            onClick={() => setSelectedAppareilId(appareil._id)}
                                         >
                                             <i className="isax isax-info-circle me-1" />
-                                            Active
+                                            {appareil.status === 'active' ? 'Active' : 'Inactive'}
                                         </Link>
                                     </div>
                                 </div>
@@ -163,10 +175,18 @@ const AppareilListing = () => {
                     </nav>
                 </div>
             </div>
+
+            {/* Modal Component */}
+            <AgentListingModal 
+                selectedAppareilId={selectedAppareilId}
+                onStatusChange={refreshList}
+                onDeleteSuccess={refreshList}
+            />
         </div>
     );
 };
 
 export default AppareilListing;
+
 
 

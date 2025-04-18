@@ -8,15 +8,14 @@ interface PredefinedDateRangesProps {
     onDateChange: (start: moment.Moment, end: moment.Moment) => void;
 }
 
-const PredefinedDateRanges: React.FC<PredefinedDateRangesProps> = ({ onDateChange }) => {
+const PredefinedDateRangesBefore: React.FC<PredefinedDateRangesProps> = ({ onDateChange }) => {
     const [state, setState] = useState({
-        start: moment(),
-        end: moment().add(29, 'days'),
+        start: moment().subtract(29, 'days'), // Default to past 29 days
+        end: moment(),
     });
-    const [lastVolDate, setLastVolDate] = useState<moment.Moment | null>(null);
     const [firstVolDate, setFirstVolDate] = useState<moment.Moment | null>(null);
+    const [lastVolDate, setLastVolDate] = useState<moment.Moment | null>(null);
     const [loading, setLoading] = useState(true);
-
     useEffect(() => {
         const fetchVolDates = async () => {
             try {
@@ -41,7 +40,7 @@ const PredefinedDateRanges: React.FC<PredefinedDateRangesProps> = ({ onDateChang
                 }
             } catch (error) {
                 console.error('Error fetching vol dates:', error);
-            } finally {
+            }finally {
                 setLoading(false);
             }
         };
@@ -56,54 +55,54 @@ const PredefinedDateRanges: React.FC<PredefinedDateRangesProps> = ({ onDateChang
         onDateChange(start, end);
     };
 
-    // Define ranges for future dates
+    // Define ranges for PAST dates
     const ranges: { [key: string]: [moment.Moment, moment.Moment] } = {
         'Today': [moment(), moment()],
-        'Tomorrow': [moment().add(1, 'days'), moment().add(1, 'days')],
-        'Next 7 Days': [moment(), moment().add(6, 'days')],
-        'Next 30 Days': [moment(), moment().add(29, 'days')],
-        'Next 90 Days': [moment(), moment().add(89, 'days')],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'Last 90 Days': [moment().subtract(89, 'days'), moment()],
         'This Month': [moment().startOf('month'), moment().endOf('month')],
-        'Next Month': [
-            moment().add(1, 'month').startOf('month'),
-            moment().add(1, 'month').endOf('month')
+        'Last Month': [
+            moment().subtract(1, 'month').startOf('month'),
+            moment().subtract(1, 'month').endOf('month')
         ],
-        'Next Year': [moment(), moment().add(1, 'year')],
+        'Last Year': [moment().subtract(1, 'year'), moment()]
     };
 
-    // Add "All Time" range using the API first date or default to 1 year ago
-    if (firstVolDate) {
-        ranges['All Time'] = [
-            firstVolDate,
-            lastVolDate || moment().add(1, 'year')
-        ];
-    } else {
-        // Fallback if API hasn't responded yet
-        ranges['All Time'] = [
-            moment().subtract(1, 'year'),
-            moment().add(1, 'year')
-        ];
-    }
-
-    // Add "Until Last Flight" if we have last flight date
-    if (lastVolDate) {
-        ranges['Until Last Flight'] = [moment(), lastVolDate];
-    }
-
-    // Convert all ranges to Date objects
-    const convertedRanges = Object.fromEntries(
-        Object.entries(ranges).map(([key, [start, end]]) => [
-            key, 
-            [start.toDate(), end.toDate()]
-        ])
-    );
-
-    const label = `${start.format('MM/DD/YYYY')} - ${end.format('MM/DD/YYYY')}`;
-
-    if (loading) {
-        return <div>Loading date ranges...</div>;
-    }
-
+     // Add "All Time" range using the API first date or default to 1 year ago
+        if (firstVolDate) {
+            ranges['All Time'] = [
+                firstVolDate,
+                lastVolDate || moment().add(1, 'year')
+            ];
+        } else {
+            // Fallback if API hasn't responded yet
+            ranges['All Time'] = [
+                moment().subtract(1, 'year'),
+                moment().add(1, 'year')
+            ];
+        }
+    
+        // Add "Until Last Flight" if we have last flight date
+        if (lastVolDate) {
+            ranges['Until Last Flight'] = [moment(), lastVolDate];
+        }
+    
+        // Convert all ranges to Date objects
+        const convertedRanges = Object.fromEntries(
+            Object.entries(ranges).map(([key, [start, end]]) => [
+                key, 
+                [start.toDate(), end.toDate()]
+            ])
+        );
+    
+        const label = `${start.format('MM/DD/YYYY')} - ${end.format('MM/DD/YYYY')}`;
+    
+        if (loading) {
+            return <div>Loading date ranges...</div>;
+        }
+    
     return (
         <DateRangePicker
             key={`daterange-${firstVolDate?.valueOf()}-${lastVolDate?.valueOf()}`}
@@ -111,14 +110,19 @@ const PredefinedDateRanges: React.FC<PredefinedDateRangesProps> = ({ onDateChang
                 startDate: start.toDate(),
                 endDate: end.toDate(),
                 ranges: convertedRanges,
-                minDate: firstVolDate?.toDate(), // Use first flight date as minimum
+                maxDate: moment().toDate(), // Prevent selecting dates in the future
                 opens: 'right',
                 alwaysShowCalendars: false,
                 showDropdowns: false,
                 locale: {
                     applyLabel: 'Apply',
                     cancelLabel: 'Cancel',
-                    customRangeLabel: 'Custom Range'
+                    fromLabel: 'From',
+                    toLabel: 'To',
+                    customRangeLabel: 'Custom Range',
+                    daysOfWeek: moment.weekdaysMin(),
+                    monthNames: moment.months(),
+                    firstDay: moment.localeData().firstDayOfWeek()
                 }
             }}
             onCallback={handleCallback}
@@ -132,14 +136,19 @@ const PredefinedDateRanges: React.FC<PredefinedDateRangesProps> = ({ onDateChang
                     border: '1px solid #ddd',
                     borderRadius: '4px',
                     display: 'inline-flex',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    minWidth: '250px'
                 }}
             >
-                
-                <span>{label}</span>
+                <div>
+                    
+                    <span>{label}</span>
+                </div>
+                <i className="fa fa-caret-down" style={{ marginLeft: '8px' }} />
             </div>
         </DateRangePicker>
     );
 };
 
-export default PredefinedDateRanges;
+export default PredefinedDateRangesBefore;

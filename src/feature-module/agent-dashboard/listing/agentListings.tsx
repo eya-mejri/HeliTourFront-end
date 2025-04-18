@@ -77,7 +77,7 @@ const AgentListings = () => {
                                                 data-bs-toggle="tab"
                                                 data-bs-target="#Tour-list"
                                             >
-                                                Tour
+                                                Vol
                                             </Link>
                                         </li>
                                         <li>
@@ -87,12 +87,12 @@ const AgentListings = () => {
                                                 data-bs-toggle="tab"
                                                 data-bs-target="#flight-list"
                                             >
-                                                Flights
+                                                Appareil
                                             </Link>
                                         </li>
                                     </ul>
                                 </div>
-                                <div className="dropdown mb-4">
+                                {/*<div className="dropdown mb-4">
                                     <Link
                                         to="#"
                                         className="dropdown-toggle text-gray-6 btn  rounded border d-inline-flex align-items-center"
@@ -119,7 +119,7 @@ const AgentListings = () => {
                                             </Link>
                                         </li>
                                     </ul>
-                                </div>
+                                </div>*/}
                             </div>
                             <div className="tab-content">
                                 {/* Hotels List */}
@@ -2029,9 +2029,9 @@ const AgentListings = () => {
                                 {/* /Cruise List */}
                                <VolListing/>
                                 {/* /Tour List */}
-                                {/* Flight List */}
+                                {/* Appareil  List */}
                                 <AppareilListing/>
-                                {/* /Flight List */}
+                                {/*  Appareil List */}
                             </div>
                         </div>
                     </div>

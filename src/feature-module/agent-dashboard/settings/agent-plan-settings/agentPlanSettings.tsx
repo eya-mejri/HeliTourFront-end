@@ -48,6 +48,10 @@ const AgentPlanSettings = () => {
                                             <i className="isax isax-user-octagon me-2" />
                                             Edit Profile
                                         </Link>
+                                        <Link to={routes.Profile} >
+                                            <i className="isax isax-user-octagon me-2" />
+                                            Profile
+                                        </Link>
                                         <Link to={routes.agentAccountSettings}>
                                             <i className="isax isax-wallet-money me-2" />
                                             Account Settings

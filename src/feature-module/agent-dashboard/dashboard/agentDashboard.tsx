@@ -17,6 +17,8 @@ import { Table } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import BookingTable from '../../Components/BookingTable';
 import BookingStat from '../../Components/BookingStat';
+import { AnalyticsConversionRates } from '../../Components/Curve/analyst';
+import { Grid } from '@mui/material';
   
 
 
@@ -24,7 +26,7 @@ const AgentDashboard = () => {
 
   const routes = all_routes;
   //def of the variables
-  const [bookingCount, setBookingCount] = useState<number>(0);
+  const [confirmedBookingCount, setConfirmedBookingCount] = useState<number>(0);
   const [totalEarnings, setTotalEarnings] = useState<number>(0);
   const [profilCount, setProfilCount] = useState<number>(0);
   const [villeBookings, setVilleBookings] = useState<{ name: string; count: number ; color: string}[]>([]);
@@ -32,7 +34,25 @@ const AgentDashboard = () => {
   const [circuitCount, setCircuitCount] = useState<number>(0);
   const [reservationCount, setReservationCount] = useState<number>(0);
   const [dataReserv, setDataReserv] = useState<any>([]);
+  const [appareilCount, setAppareilCount] = useState<number>(0);
+  const [volCount, setVolCount] = useState<number>(0);
+  const [per, setPer] = useState<number>(0);
+  const [status, setStatus] = useState<string>("");
+  const [pendingBookingCount, setPendingBookingCount] = useState<number>(0);
+  const [perPending, setPerPending] = useState<number>(0);
+  const [statusPending, setStatusPending] = useState<string>("");
+  const [annuleBookingCount, setAnnuleBookingCount] = useState<number>(0);
+  const [perAnnule, setPerAnnule] = useState<number>(0);
+  const [statusAnnule, setStatusAnnule] = useState<string>("stable");
+  // Current month's total amount
+  const [currentAmount, setCurrentAmount] = useState<number>(0);
   
+  // Percentage change from last month
+  const [percentageChange, setPercentageChange] = useState<string>('0');
+
+
+
+
   
   //Breadcrumb Data
   const breadcrumbs = [
@@ -90,6 +110,7 @@ const AgentDashboard = () => {
     '#6610F2', // Purple
     '#E83E8C', // Pink
   ];
+  
   //douraaaa
   useEffect(() => {
     const fetchData = async () => {
@@ -272,22 +293,185 @@ const AgentDashboard = () => {
     },
   ];*/
    // Fetch the number of bookings from the backend
-   useEffect(() => {
-    const fetchBookingCount = async () => {
+   /*useEffect(() => {
+    const fetchConfirmedBookingCount = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:3000/reservation/getall');
+        const response = await fetch('http://127.0.0.1:3000/reservation/getRecent/confirmé');
         if (!response.ok) {
           throw new Error('Failed to fetch bookings');
         }
         const data = await response.json();
-        setBookingCount(data.length); // Set the count of bookings
+        setConfirmedBookingCount(data.length); // Set the count of bookings
       } catch (error) {
         console.error('Error fetching bookings:', error);
       }
     };
 
-    fetchBookingCount();
+    fetchConfirmedBookingCount();
   }, []); 
+  //get the percentage 
+  useEffect(() => {
+    const fetchPerCount = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:3000/reservation/bookingTrend30Days/confirmé`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch percentage');
+        }
+        const data = await response.json();
+        setPer(data.percentageChange);
+        setStatus(data.trend);
+      } catch (error) {
+        console.error('Error fetching per:', error);
+      }
+    };
+
+    fetchPerCount();
+  }, []); 
+
+    // Fetch the number of bookings from the backend
+    useEffect(() => {
+      const fetchPendingBookingCount = async () => {
+        try {
+          const response = await fetch('http://127.0.0.1:3000/reservation/getRecent/en attente');
+          if (!response.ok) {
+            throw new Error('Failed to fetch bookings');
+          }
+          const data = await response.json();
+          setPendingBookingCount(data.length); // Set the count of bookings
+        } catch (error) {
+          console.error('Error fetching bookings:', error);
+        }
+      };
+  
+      fetchPendingBookingCount();
+    }, []); 
+
+
+    //get the percentage 
+  useEffect(() => {
+    const fetchPercentagePendingCount = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:3000/reservation/bookingTrend30Days/${"en attente"}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch percentage');
+        }
+        const data = await response.json();
+        setPerPending(data.percentageChange);
+        setStatusPending(data.trend);
+      } catch (error) {
+        console.error('Error fetching per:', error);
+      }
+    };
+
+    fetchPercentagePendingCount();
+  }, []); 
+ // Fetch the number of bookings from the backend
+ useEffect(() => {
+  const fetchAnnuleBookingCount = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/reservation/getRecent/annulé');
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookings');
+      }
+      const data = await response.json();
+      setAnnuleBookingCount(data.length); // Set the count of bookings
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    }
+  };
+
+  fetchAnnuleBookingCount();
+}, []); */
+
+useEffect(() => {
+  const fetchBookingAnalytics = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:3000/reservation/bookingAnalytics30Days');
+      if (!response.ok) {
+        throw new Error('Failed to fetch booking analytics');
+      }
+      const data = await response.json();
+
+      // Set all states from single response
+      setConfirmedBookingCount(data.analytics.confirmé?.currentPeriodCount || 0);
+      setPer(data.analytics.confirmé?.percentageChange || "0.00");
+      setStatus(data.analytics.confirmé?.trend || "stable");
+
+      setPendingBookingCount(data.analytics["en attente"]?.currentPeriodCount || 0);
+      setPerPending(data.analytics["en attente"]?.percentageChange || "0.00");
+      setStatusPending(data.analytics["en attente"]?.trend || "stable");
+
+      setAnnuleBookingCount(data.analytics.annulé?.currentPeriodCount || 0);
+      setPerAnnule(data.analytics.annulé?.percentageChange || "0.00");
+      setStatusAnnule(data.analytics.annulé?.trend || "stable");
+
+ 
+    } catch (error) {
+      console.error('Error fetching booking analytics:', error);
+    }
+  };
+
+  fetchBookingAnalytics();
+}, []);
+
+
+  //get vol 
+  useEffect(() => {
+    const fetchVolCount = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:3000/vol/getall');
+        if (!response.ok) {
+          throw new Error('Failed to fetch bookings');
+        }
+        const data = await response.json();
+        setVolCount(data.length); // Set the count of bookings
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      }
+    };
+
+    fetchVolCount();
+  }, []); 
+
+
+  //appareil num 
+  useEffect(() => {
+    const fetchAppareilCount = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:3000/appareil/getall');
+        if (!response.ok) {
+          throw new Error('Failed to fetch appareils');
+        }
+        const data = await response.json();
+        setAppareilCount(data.length); // Set the count of bookings
+      } catch (error) {
+        console.error('Error fetching appareils:', error);
+      }
+    };
+
+    fetchAppareilCount();
+  }, []); 
+
+
+  useEffect(() => {
+    const fetchPaymentData = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:3000/paiements/getPaymentSummary');
+        
+        if (!response.ok) throw new Error('Failed to fetch payment data');
+        
+        const data = await response.json();
+        
+        setCurrentAmount(data.currentMonthAmount);
+        setPercentageChange(data.percentageChange);
+
+      } catch (error) {
+        console.error('Payment fetch error:', error);
+      } 
+    };
+
+    fetchPaymentData();
+  }, []);
   // Empty dependency array ensures this runs only once on mount
 //fetch  the total earning 
   useEffect(() => {
@@ -396,522 +580,45 @@ useEffect(() => {
             {/* /Sidebar */}
             <div className="col-xl-9 col-lg-8">
               <div className="row">
-                <AdminCard value={bookingCount} title="Total Bookings" class="isax-calendar-15" class2="bg-success"/>
-                <AdminCard value='23' title="Total Listing" class="isax-money-time5" class2="bg-orange"/>
-                <AdminCard value={totalEarnings} title="Total Earnings" class="isax-money-time5" class2="bg-info"/>
-                <AdminCard value={profilCount} title="Total profils" class="isax-magic-star5" class2="bg-indigo"/>
-
-                {/*<div className="col-xl-3 col-sm-6 d-flex">
-                  <div className="card shadow-none flex-fill">
-                    <div className="card-body text-center">
-                      <span className="avatar avatar rounded-circle bg-success mb-2">
-                        <i className="isax isax-calendar-15 fs-24" />
-                      </span>
-                      <p className="mb-1">Total Bookings</p>
-                      <h5 className="mb-2">{bookingCount}</h5>
-                      <p className="d-flex align-items-center justify-content-center fs-14">
-                        <i className="isax isax-arrow-up-15 me-1 text-success" />
-                        20% From Last Month{" "}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-3 col-sm-6 d-flex">
-                  <div className="card shadow-none flex-fill">
-                    <div className="card-body text-center">
-                      <span className="avatar avatar rounded-circle bg-orange mb-2">
-                        <i className="isax isax-money-time5 fs-24" />
-                      </span>
-                      <p className="mb-1">Total Listings</p>
-                      <h5 className="mb-2">23</h5>
-                      <Link
-                        to={routes.agentListing}
-                        className="fs-14 link-primary text-decoration-underline"
-                      >
-                        View All
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-3 col-sm-6 d-flex">
-                  <div className="card shadow-none flex-fill">
-                    <div className="card-body text-center">
-                      <span className="avatar avatar rounded-circle bg-info mb-2">
-                        <i className="isax isax-money-send5 fs-24" />
-                      </span>
-                      <p className="mb-1">Total Earnings</p>
-                      <h5 className="mb-2">{totalEarnings}</h5>
-                      <p className="d-flex align-items-center justify-content-center fs-14">
-                        <i className="isax isax-arrow-down5 me-1 text-danger" />
-                        15% From Last Month{" "}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-3 col-sm-6 d-flex">
-                  <div className="card shadow-none flex-fill">
-                    <div className="card-body text-center">
-                      <span className="avatar avatar rounded-circle bg-indigo mb-2">
-                        <i className="isax isax-magic-star5 fs-24" />
-                      </span>
-                      <p className="mb-1">Total profils</p>
-                      <h5 className="mb-2">{profilCount}</h5>
-                      <Link
-                        to={routes.agentReview}
-                        className="fs-14 link-primary text-decoration-underline"
-                      >
-                        View All
-                      </Link>
-                    </div>
-                  </div>
-                </div>*/}
+                <AdminCard value={confirmedBookingCount} title="Total Confirmed Bookings" class="isax-calendar-15" class2="bg-success" per={per} status={status}/>
+                <AdminCard value={pendingBookingCount} title="Total Pending Bookings" class="isax-money-time5" class2="bg-orange" per={perPending} status={statusPending}/>
+                <AdminCard value={annuleBookingCount} title="Total cancelled Bookings" class="isax-magic-star5" class2="bg-indigo" per={perAnnule} status={statusAnnule}/>
+                <AdminCard value={currentAmount} title="Total Earnings" class="isax-money-time5" class2="bg-info" per={percentageChange} status=""/>
               </div>
               <div className="row">
                 {/* Bookings Statistics */}
                 <div className="col-xl-4 d-flex">
-                 {/* <div className="card shadow-none flex-fill">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h6>Bookings Statistics</h6>
-                        <div className="dropdown ">
-                          <Link
-                            to="#"
-                            className="dropdown-toggle btn bg-light-200 btn-sm text-gray-6 rounded-pill fw-normal fs-14 d-inline-flex align-items-center"
-                            data-bs-toggle="dropdown"
-                          >
-                            <i className="isax isax-calendar-2 me-2 fs-14 text-gray-6" />
-                            2025
-                          </Link>
-                          <ul className="dropdown-menu  dropdown-menu-end p-3">
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item rounded-1"
-                              >
-                                <i className="ti ti-point-filled me-1" />
-                                2025
-                              </Link>
-                            </li>
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item rounded-1"
-                              >
-                                <i className="ti ti-point-filled me-1" />
-                                2024
-                              </Link>
-                            </li>
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item rounded-1"
-                              >
-                                <i className="ti ti-point-filled me-1" />
-                                2023
-                              </Link>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                      <div className="text-center mb-3">
-                        <div id="booking-chart" >
-                          <ReactApexChart
-                            options={donutChart.options}
-                            series={donutChart.series}
-                            type="donut"
-                            height={181}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                      {villeBookings.map((ville) => (
-                        <div key={ville.name} className="d-flex align-items-center justify-content-between mb-2">
-                          <h6 className={`border-icon  || 'primary'}`}  style={{ color: ville.color }}>{ville.name}</h6>
-                          <p className="fs-14">
-                            <span className="text-gray-9 fw-medium">{ville.count}</span> Bookings
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-
-                      {/*<div className="d-flex align-items-center justify-content-between mb-2">
-                        <h6 className="border-icon teal">Hotels</h6>
-                        <p className="fs-14">
-                          <span className="text-gray-9 fw-medium">16</span> Bookings
-                        </p>
-                      </div>
-                      <div className="d-flex align-items-center justify-content-between mb-2">
-                        <h6 className="border-icon secondary">Flights</h6>
-                        <p className="fs-14">
-                          <span className="text-gray-9 fw-medium">12</span> Bookings
-                        </p>
-                      </div>
-                      <div className="d-flex align-items-center justify-content-between mb-2">
-                        <h6 className="border-icon purple">Cars</h6>
-                        <p className="fs-14">
-                          <span className="text-gray-9 fw-medium">14</span> Bookings
-                        </p>
-                      </div>
-                      <div className="d-flex align-items-center justify-content-between mb-2">
-                        <h6 className="border-icon dark">Cruise</h6>
-                        <p className="fs-14">
-                          <span className="text-gray-9 fw-medium">16</span> Bookings
-                        </p>
-                      </div>
-                      <div className="d-flex align-items-center justify-content-between mb-0">
-                        <h6 className="border-icon primary">Tour</h6>
-                        <p className="fs-14">
-                          <span className="text-gray-9 fw-medium">04</span> Bookings
-                        </p>
-                      </div>
-                    </div>
-                  </div>*/}
                   <BookingStat/>
                 </div>
                 {/* /Bookings Statistics */}
                 {/* Earnings */}
                 <div className="col-xl-8 d-flex">
-                  {/*<div className="card shadow-none flex-fill">
-                    <div className="card-body pb-0">
-                      <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h6>Earnings</h6>
-                        <div className="dropdown ">
-                          <Link
-                            to="#"
-                            className="dropdown-toggle btn bg-light-200 btn-sm text-gray-6 rounded-pill fw-normal fs-14 d-inline-flex align-items-center"
-                            data-bs-toggle="dropdown"
-                          >
-                            <i className="isax isax-calendar-2 me-2 fs-14 text-gray-6" />
-                            2025
-                          </Link>
-                          <ul className="dropdown-menu  dropdown-menu-end p-3">
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item rounded-1"
-                              >
-                                <i className="ti ti-point-filled me-1" />
-                                2025
-                              </Link>
-                            </li>
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item rounded-1"
-                              >
-                                <i className="ti ti-point-filled me-1" />
-                                2024
-                              </Link>
-                            </li>
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item rounded-1"
-                              >
-                                <i className="ti ti-point-filled me-1" />
-                                2023
-                              </Link>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="d-flex align-items-center justify-content-between flex-wrap">
-                          <div className="mb-2">
-                            <p className="mb-0">Total Earnings this Year</p>
-                            <h3>{totalEarnings}</h3>
-                          </div>
-                          <div className="d-flex align-items-center mb-2">
-                            <p className="fs-14">
-                              <span className="badge badge-soft-success badge-md border border-success rounded-pill me-2">
-                                <i className="isax isax-arrow-up-3 " />
-                                12%
-                              </span>
-                              vs last years
-                            </p>
-                          </div>
-                        </div>
-                        <div id="earning-chart">
-                          <ReactApexChart
-                            options={earningChart.options}
-                            series={earningChart.series}
-                            type="bar"
-                            height={280}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>*/}
                   <EarningCard/>
                 </div>
                 {/* /Earnings */}
               </div>
               <div className="row">
                 {/* Recently Added */}
-                <div className="col-xl-6 col-xxl-5 d-flex">
-                  <div className="card shadow-none flex-fill">
-                    <div className="card-body">
-                      <h6 className="mb-4">Recently Added</h6>
-                      <div className="d-flex justify-content-between align-items-center mb-4">
-                        <div className="d-flex align-items-center">
-                          <Link
-                            to={routes.hotelDetails}
-                            className="avatar avatar-lg flex-shrink-0 me-2"
-                          >
-                            <ImageWithBasePath
-                              src="assets/img/hotels/hotel-20.jpg"
-                              className="img-fluid rounded-circle"
-                              alt="Img"
-                            />
-                          </Link>
-                          <div>
-                            <h6 className="fs-16">
-                              <Link to={routes.hotelDetails}>The Grand Horizon</Link>{" "}
-                              <span className="badge badge-soft-info badge-xs rounded-pill">
-                                <i className="isax isax-signpost me-1" />
-                                Hotels
-                              </span>
-                            </h6>
-                            <p className="fs-14">Last Booked : 25 Apr 2025</p>
-                          </div>
-                        </div>
-                        <Link
-                          to={routes.agentHotelBooking}
-                          className="btn rebook-btn btn-sm"
-                        >
-                          06 Bookings
-                        </Link>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-4">
-                        <div className="d-flex align-items-center">
-                          <Link
-                            to={routes.tourDetails}
-                            className="avatar avatar-lg flex-shrink-0 me-2"
-                          >
-                            <ImageWithBasePath
-                              src="assets/img/tours/tours-28.jpg"
-                              className="img-fluid rounded-circle"
-                              alt="Img"
-                            />
-                          </Link>
-                          <div>
-                            <h6 className="fs-16">
-                              <Link to={routes.tourDetails}>Dare DevCon</Link>{" "}
-                              <span className="badge badge-soft-pink badge-xs rounded-pill">
-                                <i className="isax isax-signpost me-1" />
-                                Tour
-                              </span>
-                            </h6>
-                            <p className="fs-14">Last Booked : 16 May 2025</p>
-                          </div>
-                        </div>
-                        <Link
-                          to={routes.agentTourBooking}
-                          className="btn rebook-btn btn-sm"
-                        >
-                          12 Bookings
-                        </Link>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-4">
-                        <div className="d-flex align-items-center">
-                          <Link
-                            to={routes.flightDetails}
-                            className="avatar avatar-lg flex-shrink-0 me-2"
-                          >
-                            <ImageWithBasePath
-                              src="assets/img/flight/flight-05.jpg"
-                              className="img-fluid rounded-circle"
-                              alt="Img"
-                            />
-                          </Link>
-                          <div>
-                            <h6 className="fs-16">
-                              <Link to={routes.flightDetails}>Altair 333</Link>{" "}
-                              <span className="badge badge-soft-teal badge-xs rounded-pill">
-                                <i className="isax isax-signpost me-1" />
-                                Flight
-                              </span>
-                            </h6>
-                            <p className="fs-14">Last Booked : 25 May 2025</p>
-                          </div>
-                        </div>
-                        <Link
-                          to={routes.agentFlightBooking}
-                          className="btn rebook-btn btn-sm"
-                        >
-                          14 Bookings
-                        </Link>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-4">
-                        <div className="d-flex align-items-center">
-                          <Link
-                            to={routes.cruiseDetails}
-                            className="avatar avatar-lg flex-shrink-0 me-2"
-                          >
-                            <ImageWithBasePath
-                              src="assets/img/cruise/cruise-28.jpg"
-                              className="img-fluid rounded-circle"
-                              alt="Img"
-                            />
-                          </Link>
-                          <div>
-                            <h6 className="fs-16">
-                              <Link to={routes.cruiseDetails}>Oceania Cruises</Link>{" "}
-                              <span className="badge badge-soft-cyan badge-xs rounded-pill">
-                                <i className="isax isax-signpost me-1" />
-                                Cruise
-                              </span>
-                            </h6>
-                            <p className="fs-14">Last Booked : 18 Jun 2025</p>
-                          </div>
-                        </div>
-                        <Link
-                          to={routes.agentCruiseBooking}
-                          className="btn rebook-btn btn-sm"
-                        >
-                          22 Bookings
-                        </Link>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div className="d-flex align-items-center">
-                          <Link
-                            to={routes.tourDetails}
-                            className="avatar avatar-lg flex-shrink-0 me-2"
-                          >
-                            <ImageWithBasePath
-                              src="assets/img/tours/tours-26.jpg"
-                              className="img-fluid rounded-circle"
-                              alt="Img"
-                            />
-                          </Link>
-                          <div>
-                            <h6 className="fs-16">
-                              <Link to={routes.tourDetails}>Fitness Frenzy</Link>{" "}
-                              <span className="badge badge-soft-pink badge-xs rounded-pill">
-                                <i className="isax isax-signpost me-1" />
-                                Tour
-                              </span>
-                            </h6>
-                            <p className="fs-14">Last Booked : 25 May 2025</p>
-                          </div>
-                        </div>
-                        <Link
-                          to={routes.agentTourBooking}
-                          className="btn rebook-btn btn-sm"
-                        >
-                          40 Bookings
-                        </Link>
-                      </div>
-                    </div>
+                <div className='col-xl-12 col-xxl-12 d-flex'>
+                  <div className=" card shadow-none flex-fill">
+                    <Grid size={{ xs: 12, md: 12, lg: 12 }}>
+                      <AnalyticsConversionRates
+                        title="Conversion rates"
+                        subheader="(+43%) than last year"
+                        chart={{
+                          categories: ['Italy', 'Japan', 'China', 'Canada', 'France'],
+                          series: [
+                            { name: '2022', data: [44, 55, 41, 64, 22] },
+                            { name: '2023', data: [53, 32, 33, 52, 13] },
+                          ],
+                        }}
+                      />
+                    </Grid>
+
                   </div>
                 </div>
                 {/* /Recently Added */}
                 {/* Recent Invoices */}
-                <div className="col-xxl-7 col-xl-6 d-flex">
-                  <div className="card shadow-none flex-fill">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-center mb-4 gap-2">
-                        <h6>Latest Invoices</h6>
-                      </div>
-                      <div className="card shadow-none mb-4">
-                        <div className="card-body p-2">
-                          <div className="d-flex justify-content-between align-items-center flex-fill">
-                            <div>
-                              <div className="d-flex align-items-center flex-wrap mb-1">
-                                <Link
-                                  to={routes.invoices}
-                                  className="fs-14 link-primary border-end pe-2 me-2 mb-0"
-                                >
-                                  #INV12565
-                                </Link>
-                                <p className="fs-14">Date: 15 May 2024</p>
-                              </div>
-                              <h6 className="fs-16 fw-medium">
-                                <Link to={routes.flightDetails}>Cloudrider 789</Link>
-                              </h6>
-                            </div>
-                            <div className="text-end">
-                              <p className="fs-14 mb-1">Amount</p>
-                              <h6 className="fw-medium">$569</h6>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="card shadow-none mb-4">
-                        <div className="card-body p-2">
-                          <div className="d-flex justify-content-between align-items-center flex-fill">
-                            <div>
-                              <div className="d-flex align-items-center flex-wrap mb-1">
-                                <Link
-                                  to={routes.invoices}
-                                  className="fs-14 link-primary border-end pe-2 me-2 mb-0"
-                                >
-                                  #INV12564
-                                </Link>
-                                <p className="fs-14">Date: 13 May 2024</p>
-                              </div>
-                              <h6 className="fs-16 fw-medium">
-                                <Link to={routes.hotelDetails}>The Luxe Haven</Link>
-                              </h6>
-                            </div>
-                            <div className="text-end">
-                              <p className="fs-14 mb-1">Amount</p>
-                              <h6 className="fw-medium">$430</h6>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="card shadow-none mb-4">
-                        <div className="card-body p-2">
-                          <div className="d-flex justify-content-between align-items-center flex-fill">
-                            <div>
-                              <div className="d-flex align-items-center flex-wrap mb-1">
-                                <Link
-                                  to={routes.invoices}
-                                  className="fs-14 link-primary border-end pe-2 me-2 mb-0"
-                                >
-                                  #INV12563
-                                </Link>
-                                <p className="fs-14">Date: 10 May 2024</p>
-                              </div>
-                              <h6 className="fs-16 fw-medium">
-                                <Link to={routes.carDetails}>Ford Mustang 4.0 AT</Link>
-                              </h6>
-                            </div>
-                            <div className="text-end">
-                              <p className="fs-14 mb-1">Amount</p>
-                              <h6 className="fw-medium">$380</h6>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="card shadow-none mb-0">
-                        <div className="card-body p-2">
-                          <div className="d-flex justify-content-between align-items-center flex-fill">
-                            <div>
-                              <h6 className="fs-16 fw-medium mb-1">
-                                <Link to={routes.cruiseDetails}>Super Aquamarine</Link>
-                              </h6>
-                              <div className="d-flex align-items-center flex-wrap">
-                                <Link
-                                  to={routes.invoices}
-                                  className="fs-14 link-primary border-end pe-2 me-2 mb-0"
-                                >
-                                  #INV12562
-                                </Link>
-                                <p className="fs-14">Date: 04 May 2024</p>
-                              </div>
-                            </div>
-                            <div className="text-end">
-                              <p className="fs-14 mb-1">Amount</p>
-                              <h6 className="fw-medium">$475</h6>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
                 {/* /Recent Invoices */}
               </div>
               {/* Add Lists */}
@@ -919,130 +626,20 @@ useEffect(() => {
                 <AddCard title="Villes" number={`${numberVille} Villes`} class="bg-success-100" lien="routes.addHotel"/>
                 <AddCard title="Circuits" number={`${circuitCount} Circuits`}  class="bg-pink-100" lien="routes.addFlight"/>
                 <AddCard title="Reserv" number={`${reservationCount} Reservations`} class="bg-danger-100" lien="routes.addTour"/>
-                <AddCard title="Car" number="9 Cars" class="bg-purple-100" lien="routes.addCar"/>
-                {/*<div className="col">
-                  <div className="card bg-success-100 border-0 shadow-none">
-                    <div className="card-body">
-                      <h6 className="mb-1">4 Hotels</h6>
-                      <Link
-                        to={routes.addHotel}
-                        className="fs-14 fw-medium link-default text-decoration-underline"
-                      >
-                        Add New Hotels
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="card bg-pink-100 border-0 shadow-none">
-                    <div className="card-body">
-                      <h6 className="mb-1">4 Flights</h6>
-                      <Link
-                        to={routes.addFlight}
-                        className="fs-14 fw-medium link-primary text-decoration-underline"
-                      >
-                        Add New Flight
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="card bg-danger-100 border-0 shadow-none">
-                    <div className="card-body">
-                      <h6 className="mb-1">5 Tours</h6>
-                      <Link
-                        to={routes.addTour}
-                        className="fs-14 fw-medium link-default text-decoration-underline"
-                      >
-                        Add New Tour
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="card bg-purple-100 border-0 shadow-none">
-                    <div className="card-body">
-                      <h6 className="mb-1">9 Cars</h6>
-                      <Link
-                        to={routes.addCar}
-                        className="fs-14 fw-medium link-default text-decoration-underline"
-                      >
-                        Add New Car
-                      </Link>
-                    </div>
-                  </div>
-                </div>*/}
-                <div className="col">
-                  <div className="card bg-cyan-100 border-0 shadow-none">
-                    <div className="card-body">
-                      <h6 className="mb-1">8 Cruise</h6>
-                      <Link
-                        to={routes.addCruise}
-                        className="fs-14 fw-medium link-default text-decoration-underline"
-                      >
-                        Add New Cruise
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                <AddCard title="Appareil" number={`${appareilCount} Appareils`} class="bg-purple-100" lien ="/appareil/AddAppareil"/>
+                <AddCard title="Vol" number={`${volCount} Vols `} class="bg-cyan-100" lien="/vol/AddVol"/>
+                
               </div>
               {/* /Add Lists */}
               {/* Hotel-Booking List */}
               <div className="card hotel-list mb-0">
                 <div className="card-body p-0">
                   <div className="list-header d-flex align-items-center justify-content-between flex-wrap">
-                    <h6 className="">Recent Bookings</h6>
-                    <div className="d-flex align-items-center flex-wrap">
-                      <div className="dropdown me-3">
-                        <Link
-                          to="#"
-                          className="dropdown-toggle text-gray-6 btn  rounded border d-inline-flex align-items-center"
-                          data-bs-toggle="dropdown"
-                          
-                        >
-                          Hotels
-                        </Link>
-                        <ul className="dropdown-menu dropdown-menu-end p-3">
-                          <li>
-                            <Link
-                              to="#"
-                              className="dropdown-item rounded-1"
-                            >
-                              Single Room
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="#"
-                              className="dropdown-item rounded-1"
-                            >
-                              Double Room
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="#"
-                              className="dropdown-item rounded-1"
-                            >
-                              Twin Room
-                            </Link>
-                          </li>
-                        </ul>
-                      </div>
-                      <div className="input-icon-start position-relative">
-                        <span className="icon-addon">
-                          <i className="isax isax-search-normal-1 fs-14" />
-                        </span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search"
-                        />
-                      </div>
-                    </div>
+                    <h6 className="">Bookings</h6>
                   </div>
                   {/* Hotel List */}
                   {/*<Table dataSource={data} columns={columns} Selection={false} />*/}
+                  
                   <BookingTable numPage="5"/>
                   {/* /Hotel List */}
                 </div>

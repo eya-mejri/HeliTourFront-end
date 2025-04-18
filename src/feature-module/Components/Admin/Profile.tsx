@@ -1,26 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { all_routes } from '../../router/all_routes';
 import Breadcrumb from '../../../core/common/Breadcrumb/breadcrumb';
-import Sidebar from '../sidebar/sidebar';
 import { Link } from 'react-router-dom';
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import CustomSelect from '../../../core/common/commonSelect';
 import { City, CountryOption, State } from '../../../core/common/selectOption/json/selectOption';
+import Sidebar from '../../agent-dashboard/sidebar/sidebar';
+
+interface Adresse {
+    _id: string;
+    Pays: string;
+    Ville: string;
+    Code_Postal: string;
+    Adresse_Locale: string;
+}
+
+interface Role {
+    _id: string;
+    Nom: string;
+}
 
 interface UserInfo {
+    _id: string;
     Nom: string;
     Prenom: string;
     Email: string;
     Num_Telephone: number;
-    Adresse: {
-        Pays: string;
-        Ville: string;
-        Code_Postal: string;
-        Adresse_Locale: string;
-    };
+    Adresse: Adresse;
+    Role: Role;
+    Date_Creation: string;
 }
 
-const AgentSettings = () => {
+const Profile = () => {
     const routes = all_routes;
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
@@ -56,58 +67,6 @@ const AgentSettings = () => {
         fetchUserInfo();
     }, []);
 
-    // Handle input changes for basic information
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setUserInfo((prevUserInfo) => ({
-            ...prevUserInfo!,
-            [name]: value,
-        }));
-    };
-
-    // Handle input changes for address information
-    const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setUserInfo((prevUserInfo) => ({
-            ...prevUserInfo!,
-            Adresse: {
-                ...prevUserInfo!.Adresse,
-                [name]: value,
-            },
-        }));
-    };
-
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            console.error('No token found');
-            return;
-        }
-
-        const response = await fetch('http://localhost:3000/utilisateur/updateProfile', {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userInfo), // Send updated user info including address
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to update profile');
-        }
-
-        alert('Profile updated successfully!');
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        alert('Failed to update profile');
-    }
-};
-
     // Breadcrumb Data
     const breadcrumbs = [
         {
@@ -142,11 +101,11 @@ const AgentSettings = () => {
                                 </div>
                                 <div className="card-body pb-3">
                                     <div className="settings-link d-flex align-items-center flex-wrap">
-                                        <Link to={routes.Profile}>
+                                        <Link to={routes.Profile} className="active ps-3">
                                             <i className="isax isax-user-octagon me-2" />
                                             Profile
                                         </Link>
-                                        <Link to={routes.agentSettings} className="active ps-3">
+                                        <Link to={routes.agentSettings}>
                                             <i className="fa-solid fa-pen-to-square me-2 "></i>
                                             Edit Profile
                                         </Link>
@@ -168,7 +127,7 @@ const AgentSettings = () => {
                                         </Link>*/}
                                     </div>
                                     {/* Settings Content */}
-                                    <form onSubmit={handleSubmit}>
+                                    <form>
                                         <div className="settings-content mb-3">
                                             <h6 className="fs-16 mb-3">Basic Information</h6>
                                             <div className="row gy-2">
@@ -214,9 +173,8 @@ const AgentSettings = () => {
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            name="Nom"
                                                             value={userInfo?.Nom || ''}
-                                                            onChange={handleInputChange}
+                                                            readOnly
                                                         />
                                                     </div>
                                                 </div>
@@ -226,9 +184,8 @@ const AgentSettings = () => {
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            name="Prenom"
                                                             value={userInfo?.Prenom || ''}
-                                                            onChange={handleInputChange}
+                                                            readOnly
                                                         />
                                                     </div>
                                                 </div>
@@ -238,9 +195,8 @@ const AgentSettings = () => {
                                                         <input
                                                             type="email"
                                                             className="form-control"
-                                                            name="Email"
                                                             value={userInfo?.Email || ''}
-                                                            onChange={handleInputChange}
+                                                            readOnly
                                                         />
                                                     </div>
                                                 </div>
@@ -250,9 +206,19 @@ const AgentSettings = () => {
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            name="Num_Telephone"
                                                             value={userInfo?.Num_Telephone || ''}
-                                                            onChange={handleInputChange}
+                                                            readOnly
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="col-lg-6">
+                                                    <div>
+                                                        <label className="form-label">Role</label>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={userInfo?.Role?.Nom || ''}
+                                                            readOnly
                                                         />
                                                     </div>
                                                 </div>
@@ -268,9 +234,8 @@ const AgentSettings = () => {
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            name="Adresse_Locale"
                                                             value={userInfo?.Adresse?.Adresse_Locale || ''}
-                                                            onChange={handleAddressChange}
+                                                            readOnly
                                                         />
                                                     </div>
                                                 </div>
@@ -280,9 +245,8 @@ const AgentSettings = () => {
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            name="Pays"
                                                             value={userInfo?.Adresse?.Pays || ''}
-                                                            onChange={handleAddressChange}
+                                                            readOnly
                                                         />
                                                     </div>
                                                 </div>
@@ -292,9 +256,8 @@ const AgentSettings = () => {
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            name="Ville"
                                                             value={userInfo?.Adresse?.Ville || ''}
-                                                            onChange={handleAddressChange}
+                                                            readOnly
                                                         />
                                                     </div>
                                                 </div>
@@ -304,9 +267,8 @@ const AgentSettings = () => {
                                                         <input
                                                             type="text"
                                                             className="form-control"
-                                                            name="Code_Postal"
                                                             value={userInfo?.Adresse?.Code_Postal || ''}
-                                                            onChange={handleAddressChange}
+                                                            readOnly
                                                         />
                                                     </div>
                                                 </div>
@@ -316,9 +278,9 @@ const AgentSettings = () => {
                                             <Link to="#" className="btn btn-light me-2">
                                                 Cancel
                                             </Link>
-                                            <button type="submit" className="btn btn-primary">
+                                            <Link to="#" className="btn btn-primary">
                                                 Save
-                                            </button>
+                                            </Link>
                                         </div>
                                     </form>
                                     {/* /Settings Content*/}
@@ -334,4 +296,4 @@ const AgentSettings = () => {
     );
 };
 
-export default AgentSettings;
+export default Profile;

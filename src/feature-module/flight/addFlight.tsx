@@ -10,7 +10,9 @@ import AddFaq from '../../core/common/modal/addFaq'
 import EditFaq from '../../core/common/modal/editFaq'
 import DeleteModal from '../../core/common/modal/deleteModal'
 import DefaultEditor from "react-simple-wysiwyg";
-import AddAppareil from '../Components/addAppareil'
+import AddAppareil from '../Components/Appareil/addAppareil'
+
+
 
 const AddFlight = () => {
 

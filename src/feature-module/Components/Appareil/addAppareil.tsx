@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import ImageWithBasePath from "../../core/common/imageWithBasePath";
 import DefaultEditor from "react-simple-wysiwyg";
 import React, { useState } from "react";
-import { all_routes } from "../router/all_routes";
 import { DatePicker } from 'antd';
 import axios from 'axios'; // Import axios for making API calls
+import ImageWithBasePath from "../../../core/common/imageWithBasePath";
+import dayjs, { Dayjs } from "dayjs";
+
 
 const AddAppareil = () => {
     const [galleryItems, setGalleryItems] = useState<string[]>([]);
@@ -78,6 +79,9 @@ const AddAppareil = () => {
         alert("Failed to add appareil. Please try again.");
       }
     };
+    const disabledDate = (current: Dayjs) => {
+      return current.isAfter(dayjs(), 'day');
+    };
 
   return (
     <form onSubmit={handleSubmit} data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true">
@@ -109,6 +113,7 @@ const AddAppareil = () => {
                     className="form-control datetimepicker"
                     placeholder="dd/mm/yyyy"
                     onChange={handleDateChange}
+                    disabledDate={disabledDate}
                     required
                   />
                   <span className="input-icon-addon">

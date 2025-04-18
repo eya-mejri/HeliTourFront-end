@@ -4,7 +4,9 @@ import Header from "../core/common/header/header";
 import Cursor from "../core/common/cursor/cursor";
 import BackToTop from "../core/common/backtotop/backToTop";
 import Footer from "../core/common/footer/footer";
+import io from "socket.io-client";
 
+const socket = io('http://localhost:3002', { autoConnect: true });
 const Feature = () => {
   const [showLoader, setShowLoader] = useState(false);
 
@@ -32,6 +34,33 @@ const Feature = () => {
     }
     window.scrollTo(0, 0);
   }, [location.pathname])
+  useEffect(() => {
+    const handleNewReservation = (data: any) => {
+      const newNotification = {
+        id: Date.now(),
+        type: "New Reservation",
+        message: `New reservation: ${data.reservation?.Num_Reservation || "Unknown"}`,
+        time: new Date().toLocaleTimeString(),
+      };
+  
+      const existing = JSON.parse(localStorage.getItem("notifications") || "[]");
+      const updated = [newNotification, ...existing];
+      localStorage.setItem("notifications", JSON.stringify(updated));
+  
+      const unread = JSON.parse(localStorage.getItem("unreadNotificationIds") || "[]");
+      const updatedUnread = [newNotification.id, ...unread];
+      localStorage.setItem("unreadNotificationIds", JSON.stringify(updatedUnread));
+  
+      console.log("📥 New reservation received via socket");
+    };
+  
+    if (!socket.connected) socket.connect();
+    socket.on("new_reservation", handleNewReservation);
+  
+    return () => {
+      socket.off("new_reservation", handleNewReservation);
+    };
+  }, []);
   
   return (
     <>
