@@ -65,7 +65,7 @@ const AppareilListing = () => {
             <div className="card border-0">
                 <div className="card-body d-flex align-items-center justify-content-between flex-wrap row-gap-2">
                     <div>
-                        <h5 className="mb-1">Appareil</h5>
+                        <h5 className="mb-1">Device</h5>
                         <p>No of Listings : {appareils.length}</p>
                     </div>
                     <div>
@@ -74,7 +74,7 @@ const AppareilListing = () => {
                             className="btn btn-primary d-inline-flex align-items-center me-0"
                         >
                             <i className="isax isax-add me-1 fs-16" />
-                            Add Appareil
+                            Add Device
                         </Link>
                     </div>
                 </div>
@@ -87,6 +87,7 @@ const AppareilListing = () => {
                             <div className="place-img">
                                 <Link to={routes.flightDetails}>
                                     <ImageWithBasePath
+                                     style={{ height: '200px', width: '100%', objectFit: 'cover', borderRadius: '8px' }}
                                         src={`http://127.0.0.1:3000/assets/img/${appareil.photo}`}
                                         className="img-fluid"
                                         alt="img"

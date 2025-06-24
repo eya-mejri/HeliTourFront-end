@@ -1,726 +1,347 @@
-import React, { useState } from 'react'
-
-import { Link } from 'react-router-dom';
-import { Access, Brake, CarBody, CountryOption, Door, FuelType, Steering, Transmission, VehicleType } from '../../../../core/common/selectOption/json/selectOption';
-
-import { DatePicker } from 'antd';
-import dayjs from 'dayjs';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { all_routes } from '../../../router/all_routes';
 import Breadcrumb from '../../../../core/common/Breadcrumb/breadcrumb';
-import CustomSelect from '../../../../core/common/commonSelect';
 import DefaultEditor from 'react-simple-wysiwyg';
-import AddFaq from '../../../../core/common/modal/addFaq';
-import EditFaq from '../../../../core/common/modal/editFaq';
-import DeleteModal from '../../../../core/common/modal/deleteModal';
+import axios from 'axios';
+import { message } from 'antd';
 import ImageWithBasePath from '../../../../core/common/imageWithBasePath';
 
+const EditVille = () => {
+    const routes = all_routes;
+    const { id } = useParams();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-
-const EditCar = () => {
-
-    const routes = all_routes
-    //Breadcrumb Data
+    // Breadcrumb Data
     const breadcrumbs = [
         {
-            label: 'Edit Car',
+            label: 'Destinations',
             active: false,
-            link: routes.home1
+            link: routes.agentListing,
         },
         {
-            label: 'Edit Car',
+            label: 'Edit Destination',
             active: true,
         },
     ];
 
-    const [defaultDate] = useState(dayjs());
+    // States
+    const [nom, setNom] = useState('');
+    const [description, setDescription] = useState('');
+    const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [newImages, setNewImages] = useState<File[]>([]);
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
 
-    const [values, setValue] = React.useState();
+    // Load ville data
+    useEffect(() => {
+        const fetchVille = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get(`http://127.0.0.1:3000/ville/getbyid/${id}`);
+                const villeData = response.data;
+                
+                setNom(villeData.Nom);
+                setDescription(villeData.Description);
+                
+                if (villeData.photos?.length > 0) {
+                    setExistingImages(villeData.photos.map((photo: string) => 
+                        `http://localhost:3000/assets/img/villes/${photo}`
+                    ));
+                }
+            } catch (error) {
+                console.error('Error fetching ville:', error);
+                message.error('Failed to load ville data');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    function onChange(e: any) {
-        setValue(e.target.value);
-    }
+        if (id) fetchVille();
+    }, [id]);
 
-    const [highlights, setHighlights] = useState<string[]>([]);
-
-    const addHighlight = () => {
-        setHighlights([...highlights, ""]); // Add an empty highlight
+    // Handlers
+    const handleNomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setNom(e.target.value);
     };
 
-    const removeHighlight = (index: number) => {
-        setHighlights(highlights.filter((_, i) => i !== index)); // Remove the highlight by index
+    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setDescription(e.target.value);
     };
 
-    const updateHighlight = (index: number, value: string) => {
-        const updatedHighlights = [...highlights];
-        updatedHighlights[index] = value; // Update the value of a highlight
-        setHighlights(updatedHighlights);
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const filesArray = Array.from(e.target.files);
+            setNewImages(prev => [...prev, ...filesArray]);
+            
+            const newPreviewUrls = filesArray.map(file => URL.createObjectURL(file));
+            setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+        }
     };
 
-    const [galleryItems, setGalleryItems] = useState<string[]>([
-        "assets/img/uploads/upload-01.jpg",
-        "assets/img/uploads/upload-02.jpg",
-        "assets/img/uploads/upload-03.jpg",
-        "assets/img/uploads/upload-04.jpg",
-        "assets/img/uploads/upload-05.jpg",
-    ]);
-    const removeGalleryItem = (index: number) => {
-        setGalleryItems(galleryItems.filter((_, i) => i !== index)); // Remove item by index
+    const removeExistingImage = (index: number) => {
+        const imageUrl = existingImages[index];
+        const imageName = imageUrl.split('/').pop();
+        
+        if (imageName) {
+            setImagesToDelete(prev => [...prev, imageName]);
+        }
+        setExistingImages(existingImages.filter((_, i) => i !== index));
     };
 
+    const removeNewImage = (index: number) => {
+        URL.revokeObjectURL(previewUrls[index]);
+        
+        const newFiles = [...newImages];
+        newFiles.splice(index, 1);
+        setNewImages(newFiles);
+        
+        const newPreviews = [...previewUrls];
+        newPreviews.splice(index, 1);
+        setPreviewUrls(newPreviews);
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const formData = new FormData();
+            formData.append('_id', id || '');
+            formData.append('Nom', nom);
+            formData.append('Description', description);
+
+            // Add new images
+            newImages.forEach(file => {
+                formData.append('photos', file);
+            });
+
+            // Add images to delete
+            imagesToDelete.forEach(imageName => {
+                formData.append('photosToDelete', imageName);
+            });
+
+            const response = await axios.put(
+                'http://127.0.0.1:3000/ville/putVille',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
+
+            // Update state with new image URLs
+            if (response.data.photos) {
+                setExistingImages(response.data.photos.map((photo: string) => 
+                    `http://localhost:3000/assets/img/villes/${photo}`
+                ));
+                setNewImages([]);
+                previewUrls.forEach(url => URL.revokeObjectURL(url));
+                setPreviewUrls([]);
+                setImagesToDelete([]);
+            }
+
+            message.success('Ville updated successfully!');
+        } catch (error) {
+            console.error('Error updating ville:', error);
+            message.error('Failed to update ville');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleReset = () => {
+        window.location.reload();
+    };
 
     return (
         <div>
-            <Breadcrumb title="Edit Car" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-03" />
-
-
-            <>
-                {/* Page Wrapper */}
-                <div className="content">
-                    <div className="container">
-                        <div className="row">
-                            {/* Sidebar */}
-                            <div className="col-lg-3">
-                                <div className="card border-0 mb-4 mb-lg-0 theiaStickySidebar">
-                                    <div className="card-body">
-                                        <div>
-                                            <h5 className="mb-3">Add Car</h5>
-                                            <ul className="add-tab-list" id='list-example-3'>
-                                                <li>
-                                                    <Link to="#basic_info" className="active">
-                                                        Basic Info
-                                                    </Link>
-                                                </li>
-                                                <li>
-                                                    <a href="#specifications">Specifications</a>
-                                                </li>
-                                                <li>
-                                                    <a href="#additional_service">Additional Service</a>
-                                                </li>
-                                                <li>
-                                                    <a href="#description">Description</a>
-                                                </li>
-                                                <li>
-                                                    <a href="#features">Features</a>
-                                                </li>
-                                                <li>
-                                                    <a href="#location">Locations</a>
-                                                </li>
-                                                <li>
-                                                    <a href="#faq">FAQ</a>
-                                                </li>
-                                                <li>
-                                                    <a href="#gallery">Gallery</a>
-                                                </li>
-                                            </ul>
-                                        </div>
+            <Breadcrumb title="Edit Destination" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-03" backgroundImage="http://localhost:3000/assets/img/bgTourList.webp" />
+            <div className="content">
+                <div className="container">
+                    <div className="row">
+                        <div className="col-lg-3 theiaStickySidebar">
+                            <div className="card border-0 mb-4 mb-lg-0 theiaStickySidebar">
+                                <div className="card-body">
+                                    <div>
+                                        <h5 className="mb-3">Edit Destination</h5>
+                                        <ul className="add-tab-list" id="list-example">
+                                            <li><a href="#basic_info" className="active">Basic Info</a></li>
+                                            <li><a href="#description">Description</a></li>
+                                            <li><a href="#gallery">Gallery</a></li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
-                            {/* /Sidebar */}
-                            {/* Add Car */}
-                            <div className="col-lg-9">
-                                <form action={routes.carGrid} data-bs-spy="scroll" data-bs-target="#list-example-3" data-bs-smooth-scroll="true">
-                                    {/* Basic Info */}
-                                    <div className="card shadow-none" id="basic_info">
-                                        <div className="card-header">
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <h6 className="fs-18">Basic Info</h6>
-                                            </div>
+                        </div>
+                        <div className="col-lg-9">
+                            <form onSubmit={handleSubmit}>
+                                <div className="card shadow-none" id="basic_info">
+                                    <div className="card-header">
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <h6 className="fs-18">Basic Info</h6>
                                         </div>
-                                        <div className="card-body pb-1">
-                                            <div className="row">
-                                                <div className="col-md-12">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Car Title</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-xl-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Make</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-xl-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Model</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-xl-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Vehicle Type</label>
-                                                        <CustomSelect
-                                                            options={VehicleType}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={VehicleType[1]}
-                                                        />
-                                                    </div>
+                                    </div>
+                                    <div className="card-body pb-1">
+                                        <div className="row">
+                                            <div className="col-md-12">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Name</label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        value={nom}
+                                                        onChange={handleNomChange}
+                                                        required
+                                                        disabled={loading}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    {/* /Basic Info */}
-                                    {/* Specifications */}
-                                    <div className="card shadow-none" id="specifications">
-                                        <div className="card-header">
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <h6 className="fs-18">Specifications</h6>
-                                            </div>
-                                        </div>
-                                        <div className="card-body pb-1">
-                                            <div className="row">
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Transmission</label>
-                                                        <CustomSelect
-                                                            options={Transmission}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={Transmission[1]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Make</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Body</label>
-                                                        <CustomSelect
-                                                            options={CarBody}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={CarBody[1]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Fuel Type</label>
-                                                        <CustomSelect
-                                                            options={FuelType}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={FuelType[1]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Mileage</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Model Year</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">AC</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Doors</label>
-                                                        <CustomSelect
-                                                            options={Door}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={Door[1]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Steering</label>
-                                                        <CustomSelect
-                                                            options={Steering}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={Steering[1]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Brake</label>
-                                                        <CustomSelect
-                                                            options={Brake}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={Brake[1]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Engine (Hp)</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Access</label>
-                                                        <CustomSelect
-                                                            options={Access}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={Access[1]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* /Specifications */}
-                                    {/* Additional Service */}
-                                    <div className="card shadow-none" id="additional_service">
-                                        <div className="card-header">
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <h5 className="fs-18">Additional Service</h5>
-                                            </div>
-                                        </div>
-                                        <div className="card-body">
-                                            <div className="add-service-info">
-                                                <div className="row">
-                                                    <div className="col-md-6">
-                                                        <div className="mb-3">
-                                                            <label className="form-label">
-                                                                Name of the Service
-                                                            </label>
-                                                            <input type="text" className="form-control" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        <div className="mb-3">
-                                                            <label className="form-label">Price</label>
-                                                            <input type="text" className="form-control" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {highlights.map((highlight, index) => (
-                                                    <div className="row service-info">
-                                                        <div className="col-md-6">
-                                                            <div className="mb-3">
-                                                                <label className="form-label">Name of the Service</label>
-                                                                <input type="text" className="form-control" />
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-md-6">
-                                                            <div className="mb-3">
-                                                                <label className="form-label">Price</label>
-                                                                <div className="d-flex align-items-center">
-                                                                    <input type="text" className="form-control" />
-                                                                    <Link to="#" className="text-danger trash-icon d-flex align-items-center justify-content-center ms-3" onClick={() => removeHighlight(index)}>
+                                </div>
 
-                                                                        <i className="isax isax-trash" />
-                                                                    </Link>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                <div className="card shadow-none" id="description">
+                                    <div className="card-header">
+                                        <h5 className="fs-18">Description</h5>
+                                    </div>
+                                    <div className="card-body text-editor">
+                                        
+                                        <textarea
+                                        className="form-control"
+                                        rows={5}
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        placeholder="Enter a description..."
+                                        />
+                                    </div>
+                                </div>
 
-                                                ))}
-
-                                            </div>
-                                            <div>
-                                                <Link
-                                                    to="#"
-                                                    className="btn btn-primary btn-sm add-service"
-                                                    onClick={addHighlight}
-                                                >
-                                                    <i className="isax isax-add-circle me-1" />
-                                                    Add New
-                                                </Link>
-                                            </div>
-                                        </div>
+                                <div className="card shadow-none" id="gallery">
+                                    <div className="card-header">
+                                        <h5 className="fs-18">Gallery</h5>
                                     </div>
-                                    {/* /Additional Service */}
-                                    {/* Description */}
-                                    <div className="card shadow-none" id="description">
-                                        <div className="card-header">
-                                            <h5 className="fs-18">Description</h5>
+                                    <div className="card-body">
+                                        <div 
+                                            className="file-upload drag-file w-100 d-flex align-items-center justify-content-center flex-column mb-2"
+                                            onClick={triggerFileInput}
+                                            style={{ cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
+                                        >
+                                            <span className="upload-img d-block mb-2">
+                                                <i className="isax isax-document-upload fs-24" />
+                                            </span>
+                                            <h6 className="mb-1">Upload Destination Images</h6>
+                                            <p className="mb-0">Image size should below 5MB</p>
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                accept="image/*"
+                                                onChange={handleImageChange}
+                                                multiple
+                                                style={{ display: 'none' }}
+                                                disabled={loading}
+                                            />
                                         </div>
-                                        <div className="card-body text-editor">
-                                            <DefaultEditor value={values} onChange={onChange} />
-                                        </div>
-                                    </div>
-                                    {/* /Description */}
-                                    {/* Location */}
-                                    <div className="card shadow-none" id="location">
-                                        <div className="card-header">
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <h5 className="fs-18">Location</h5>
-                                            </div>
-                                        </div>
-                                        <div className="card-body pb-1">
-                                            <div className="row">
-                                                <div className="col-xl-3 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Country</label>
-                                                        <CustomSelect
-                                                            options={CountryOption}
-                                                            className="select d-flex"
-                                                            placeholder="Select"
-                                                            defaultValue={CountryOption[1]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="col-xl-3 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">City</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-xl-3 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">State</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-xl-3 col-md-6">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Zip Code</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-md-12">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Address</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-md-12">
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Address 1</label>
-                                                        <input type="text" className="form-control" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* /Location */}
-                                    {/* Features */}
-                                    <div className="card shadow-none" id="features">
-                                        <div className="card-header">
-                                            <div className="d-flex align-items-center justify-content-between">
-                                                <h5 className="fs-18">Features</h5>
-                                            </div>
-                                        </div>
-                                        <div className="card-body pb-1">
-                                            <div className="row">
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-1"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-1"
-                                                            >
-                                                                Multi-zone A/C
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-2"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-2"
-                                                            >
-                                                                Heated front seats
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-3"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-3"
-                                                            >
-                                                                Hiking &amp; Nature Walks
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-4"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-4"
-                                                            >
-                                                                Andriod Auto
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-7"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-7"
-                                                            >
-                                                                Premium sound system
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-8"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-8"
-                                                            >
-                                                                Bluetooth
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-9"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-9"
-                                                            >
-                                                                Keyles Start
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-10"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-10"
-                                                            >
-                                                                Memory seat
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-4 col-md-6">
-                                                    <div className="mb-3">
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-13"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-13"
-                                                            >
-                                                                Memory seat
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-14"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-14"
-                                                            >
-                                                                Adaptive Control
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-15"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-15"
-                                                            >
-                                                                Intermittent wipers
-                                                            </label>
-                                                        </div>
-                                                        <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                            <input
-                                                                className="form-check-input ms-0 mt-0"
-                                                                type="checkbox"
-                                                                id="service-16"
-                                                            />
-                                                            <label
-                                                                className="form-check-label ms-2"
-                                                                htmlFor="service-16"
-                                                            >
-                                                                4 power windows
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* /Features */}
-                                    {/* FAQ */}
-                                    <div className="card shadow-none" id="faq">
-                                        <div className="card-header">
-                                            <h5 className="fs-18">FAQ</h5>
-                                        </div>
-                                        <div className="card-body">
-                                            <div className="card shadow-none mb-3">
-                                                <div className="card-body px-3 py-2">
-                                                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                                                        <h6>
-                                                            <Link to="#">
-                                                                Does offer free cancellation for a full refund?
-                                                            </Link>
-                                                        </h6>
-                                                        <div className="d-flex align-items-center">
-                                                            <Link
-                                                                to="#"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#edit_faq"
-                                                                className="rounded-edit d-flex align-items-center justify-content-center me-2"
-                                                            >
-                                                                <i className="isax isax-edit-2" />
-                                                            </Link>
-                                                            <Link
-                                                                to="#"
-                                                                className="trash-icon d-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#delete_modal"
-                                                            >
-                                                                <i className="isax isax-trash text-danger" />
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="card shadow-none mb-3">
-                                                <div className="card-body px-3 py-2">
-                                                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                                                        <h6>
-                                                            <Link to="#">Is there a pool?</Link>
-                                                        </h6>
-                                                        <div className="d-flex align-items-center">
-                                                            <Link
-                                                                to="#"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#edit_faq"
-                                                                className="rounded-edit d-flex align-items-center justify-content-center me-2"
-                                                            >
-                                                                <i className="isax isax-edit-2" />
-                                                            </Link>
-                                                            <Link
-                                                                to="#"
-                                                                className="trash-icon d-flex align-items-center justify-content-center"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#delete_modal"
-                                                            >
-                                                                <i className="isax isax-trash text-danger" />
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <Link
-                                                    to="#"
-                                                    className="btn btn-primary btn-sm"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#add_faq"
-                                                >
-                                                    <i className="isax isax-add-circle me-1" />
-                                                    Add New
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* /FAQ */}
-                                    {/* Gallery */}
-                                    <div className="card shadow-none" id="gallery">
-                                        <div className="card-header">
-                                            <h5 className="fs-18">Gallery</h5>
-                                        </div>
-                                        <div className="card-body">
-                                            <div className="file-upload drag-file w-100 d-flex align-items-center justify-content-center flex-column mb-2">
-                                                <span className="upload-img d-block mb-2">
-                                                    <i className="isax isax-document-upload fs-24" />
-                                                </span>
-                                                <h6 className="mb-1">Upload Gallery Images</h6>
-                                                <p className="mb-0">
-                                                    Upload Feature Image First, Image size should below 5MB
-                                                </p>
-                                                <input type="file" accept="video/image" />
-                                            </div>
-                                            <div className="d-flex align-items-center">
-                                                {galleryItems.map((src, index) => (
-                                                    <Link to="#" key={index} className="gallery-upload-img me-2">
-                                                        <ImageWithBasePath src={src} alt={`Gallery Item ${index + 1}`} />
+                                        <div className="d-flex align-items-center flex-wrap">
+                                            {existingImages.map((img, index) => (
+                                                <div key={`existing-${index}`} className="gallery-upload-img me-2 mb-2 position-relative">
+                                                    <img
+                                                        src={img}
+                                                        alt={`Existing ${index}`}
+                                                        style={{ 
+                                                            width: '50px', 
+                                                            height: '50px', 
+                                                            objectFit: 'cover',
+                                                            opacity: loading ? 0.7 : 1
+                                                        }}
+                                                    />
+                                                    {!loading && (
                                                         <span
-                                                            className="trash-icon d-flex align-items-center justify-content-center text-danger gallery-trash"
-                                                            onClick={() => removeGalleryItem(index)}
+                                                            className="trash-icon d-flex align-items-center justify-content-center text-danger gallery-trash position-absolute"
+                                                            style={{ 
+                                                                top: '5px', 
+                                                                right: '5px', 
+                                                                width: '20px', 
+                                                                height: '20px', 
+                                                                background: 'white', 
+                                                                borderRadius: '50%'
+                                                            }}
+                                                            onClick={() => removeExistingImage(index)}
                                                         >
                                                             <i className="isax isax-trash" />
                                                         </span>
-                                                    </Link>
-                                                ))}
-
-                                            </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {previewUrls.map((url, index) => (
+                                                <div key={`new-${index}`} className="gallery-upload-img me-2 mb-2 position-relative">
+                                                    <img
+                                                        src={url}
+                                                        alt={`New ${index}`}
+                                                        style={{ 
+                                                            width: '50px', 
+                                                            height: '50px', 
+                                                            objectFit: 'cover',
+                                                            opacity: loading ? 0.7 : 1
+                                                        }}
+                                                    />
+                                                    {!loading && (
+                                                        <span
+                                                            className="trash-icon d-flex align-items-center justify-content-center text-danger gallery-trash position-absolute"
+                                                            style={{ 
+                                                                top: '5px', 
+                                                                right: '5px', 
+                                                                width: '20px', 
+                                                                height: '20px', 
+                                                                background: 'white', 
+                                                                borderRadius: '50%'
+                                                            }}
+                                                            onClick={() => removeNewImage(index)}
+                                                        >
+                                                            <i className="isax isax-trash" />
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                    {/* /Gallery */}
-                                    <div className="d-flex align-items-center justify-content-center">
-                                        <button type="button" className="btn btn-light me-2">
-                                            Reset
-                                        </button>
-                                        <button type="submit" className="btn btn-primary">
-                                            Add New Car
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                            {/* /Add Car */}
+                                </div>
+
+                                <div className="d-flex align-items-center justify-content-center mt-4">
+                                    <button 
+                                        type="button" 
+                                        className="btn btn-light me-2"
+                                        onClick={handleReset}
+                                        disabled={loading}
+                                    >
+                                        Reset
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-primary"
+                                        disabled={loading}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                Saving...
+                                            </>
+                                        ) : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
-                {/* /Page Wrapper */}
-            </>
-
-            <AddFaq />
-            <EditFaq />
-            <DeleteModal />
+            </div>
         </div>
-    )
-}
+    );
+};
 
-export default EditCar
+export default EditVille;

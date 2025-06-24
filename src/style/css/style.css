@@ -10516,10 +10516,11 @@ footer.footer-three .footer-bottom .policy-links li a:hover {
 }
 
 .breadcrumb-bg-06 {
-  background: url("../img/bg/breadcrumb-04.jpg") no-repeat;
+  background: url("https://www.shutterstock.com/image-photo/illustration-travel-concept-plane-famous-260nw-2329937983.jpg") no-repeat;
   background-size: cover;
   background-position: center;
 }
+
 
 /*============================
  33.sidebar
@@ -13488,11 +13489,10 @@ footer.footer-three .footer-bottom .policy-links li a:hover {
   38.cruise
 ============================*/
 .hero-section-five {
-  position: relative;
-  padding: 100px 0 140px;
-  background-image: url(../img/banner/cruise-banner.jpg);
-  background-repeat: no-repeat;
-  background-size: cover;
+ /* Remove the background-image from here since you're setting it inline */
+ position: relative;
+ min-height: 100vh; /* Ensure minimum height */
+ overflow: visible; /* Allow content to overflow if needed */
 }
 @media (max-width: 991.98px) {
   .hero-section-five {
@@ -13776,15 +13776,27 @@ footer.footer-three .footer-bottom .policy-links li a:hover {
 .years-off {
   margin-bottom: 24px;
   text-align: center;
+  height: 295px; /* Add this line */
+  display: flex; /* Add these lines to center content */
+  align-items: center;
+  justify-content: center;
 }
+
 .years-off h4 {
   background: #06AED4;
   padding: 52px 40px;
   border-radius: 100px 0 0 0;
+  height: 100%; /* Add this to make h4 fill container */
+  display: flex; /* Add these to center text */
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Ensure full width */
 }
+
 @media (max-width: 991.98px) {
   .years-off h4 {
     border-radius: 10px;
+    padding: 30px 20px; /* Adjust padding for mobile */
   }
 }
 

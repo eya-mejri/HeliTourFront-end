@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Table } from 'antd';
+import { Table, Modal, Select, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import axios from 'axios';
+
+interface Role {
+  _id: string;
+  Nom: string;
+}
 
 interface User {
     _id: string;
     Nom: string;
     Prenom: string;
     Email: string;
-    Role: {
-        _id: string;
-        Nom: string;
-    };
+    Role: Role;
     Num_Telephone: number;
     Adresse: {
         Rue: string;
@@ -27,54 +29,70 @@ interface TableData {
     fullName: string;
     email: string;
     role: string;
+    roleId: string;
     phone: string;
     address: string;
     joinDate: string;
+    userId: string;
 }
+
 interface FetchUsersParams {
     Email?: string;
-    // Add other possible query parameters here if needed
-  }
+}
 
 const UsersTable = (props: { numPage: any }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [searchEmail, setSearchEmail] = useState("");
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [newRoleId, setNewRoleId] = useState<string>("");
+    const [roles, setRoles] = useState<Role[]>([]);
 
-useEffect(() => {
-    const fetchUsers = async () => {
-        try {
-            setLoading(true);
-            let url = 'http://127.0.0.1:3000/utilisateur/getAllUsersWithDetails';
-            
-            // Add email parameter if searchEmail exists
-            const params: FetchUsersParams = {};
-                if (searchEmail) {
-                params.Email = searchEmail;
-                }
-            
-            const response = await axios.get(url, { params });
-            setUsers(response.data);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Fetch all users (with optional email filter)
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                setLoading(true);
+                let url = 'http://127.0.0.1:3000/utilisateur/getAllUsersWithDetails';
+                const params: FetchUsersParams = {};
+                if (searchEmail) params.Email = searchEmail;
 
-    fetchUsers();
-}, [searchEmail]); // Re-run when searchEmail changes
+                const response = await axios.get(url, { params });
+                setUsers(response.data);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUsers();
+    }, [searchEmail]);
 
-   
+    // Fetch all roles (once on mount)
+    useEffect(() => {
+        const fetchRoles = async () => {
+            try {
+                const response = await axios.get('http://127.0.0.1:3000/role/getAllRoles');
+                setRoles(response.data);
+                console.log(response.data)
+            } catch (error) {
+                console.error('Error fetching roles:', error);
+            }
+        };
+        fetchRoles();
+    }, []);
 
     const transformedData: TableData[] = users.map((user) => ({
         key: user._id,
         fullName: `${user.Prenom} ${user.Nom}`,
         email: user.Email,
         role: user.Role?.Nom || "N/A",
+        roleId: user.Role?._id || "",
         phone: user.Num_Telephone.toString(),
         address: `${user.Adresse?.Rue || ''}, ${user.Adresse?.Ville || ''}, ${user.Adresse?.Code_Postal || ''}, ${user.Adresse?.Pays || ''}`,
         joinDate: new Date(user.Date_Creation).toLocaleDateString(),
+        userId: user._id,
     }));
 
     const columns: ColumnsType<TableData> = [
@@ -82,7 +100,19 @@ useEffect(() => {
             title: "Name",
             dataIndex: "fullName",
             key: "fullName",
-            /*sorter: (a, b) => a.fullName.localeCompare(b.fullName),*/
+            render: (text: string, record: TableData) => (
+                <a
+                  href="#!"
+                  onClick={() => {
+                    const user = users.find(u => u._id === record.userId);
+                    setSelectedUser(user || null);
+                    setNewRoleId(record.roleId);
+                    setModalVisible(true);
+                  }}
+                >
+                  {text}
+                </a>
+            ),
         },
         {
             title: "Email",
@@ -93,12 +123,6 @@ useEffect(() => {
             title: "Role",
             dataIndex: "role",
             key: "role",
-           /* filters: [
-                { text: 'Admin', value: 'Admin' },
-                { text: 'User', value: 'User' },
-                { text: 'Agent', value: 'Agent' },
-            ],
-            onFilter: (value, record) => record.role === value,*/
         },
         {
             title: "Phone",
@@ -119,9 +143,33 @@ useEffect(() => {
             title: "Join Date",
             dataIndex: "joinDate",
             key: "joinDate",
-            /*sorter: (a, b) => new Date(a.joinDate).getTime() - new Date(b.joinDate).getTime(),*/
         },
     ];
+
+    const handleModalOk = async () => {
+        if (!selectedUser) return;
+        if (newRoleId === selectedUser.Role._id) {
+            message.info("No role change detected");
+            setModalVisible(false);
+            return;
+        }
+        try {
+            await axios.patch(`http://127.0.0.1:3000/utilisateur/updateUserRole/${selectedUser._id}`, {
+                roleId: newRoleId,
+            });
+            message.success("User role updated successfully");
+            setModalVisible(false);
+            setSelectedUser(null);
+            // Refresh users list
+            setLoading(true);
+            const res = await axios.get('http://127.0.0.1:3000/utilisateur/getAllUsersWithDetails');
+            setUsers(res.data);
+            setLoading(false);
+        } catch (error) {
+            console.error("Failed to update user role:", error);
+            message.error("Failed to update user role");
+        }
+    };
 
     return (
         <div className="col-xl-12">
@@ -155,8 +203,6 @@ useEffect(() => {
                     <div className="list-header d-flex align-items-center justify-content-between flex-wrap">
                         <h6>User List</h6>
                     </div>
-                    
-                    {/* Users Table */}
                     <Table
                         columns={columns}
                         dataSource={transformedData}
@@ -170,6 +216,28 @@ useEffect(() => {
                     />
                 </div>
             </div>
+
+            {/* Modal for role change */}
+            <Modal
+                title={`Change Role for ${selectedUser?.Prenom} ${selectedUser?.Nom}`}
+                open={modalVisible}
+                onCancel={() => setModalVisible(false)}
+                onOk={handleModalOk}
+                okText="Update"
+                cancelText="Cancel"
+            >
+                <Select
+                    style={{ width: "100%" }}
+                    value={newRoleId}
+                    onChange={setNewRoleId}
+                >
+                    {roles.map(role => (
+                        <Select.Option key={role._id} value={role._id}>
+                            {role.Nom}
+                        </Select.Option>
+                    ))}
+                </Select>
+            </Modal>
         </div>
     );
 };

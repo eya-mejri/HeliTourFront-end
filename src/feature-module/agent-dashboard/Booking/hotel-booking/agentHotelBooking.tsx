@@ -161,7 +161,9 @@ useEffect (()=>{
                             <Sidebar />
                         </div>
                         {/* /Sidebar */}
+                        <div className='col-xl-9 col-lg-8'>
                         <BookingTable numPage={10} />
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,196 +1,192 @@
-import React from 'react'
-import { all_routes } from '../../router/all_routes';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 import Breadcrumb from '../../../core/common/Breadcrumb/breadcrumb';
-import ImageWithBasePath from '../../../core/common/imageWithBasePath';
-import { Link } from 'react-router-dom';
+import { all_routes } from '../../router/all_routes';
+import moment from 'moment';
 
 const CruiseBookingConfirmation = () => {
-      const routes = all_routes
-          //Breadcrumb Data
-          const breadcrumbs = [
-            {
-                label: 'Cruise',
-                link: routes.home1,
-                active: false,
-            },
-            {
-                label: 'Cruise',
-                active: true,
-            },
-            {
-                label: 'Cruise Booking Confirmation',
-                active: true,
-            },
-        ];
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [reservation, setReservation] = useState<any>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+  const [deadline, setDeadline] = useState<Date | null>(null);
+
+  // Fetch reservation data
+  useEffect(() => {
+    const fetchReservationDetails = async () => {
+      try {
+        const res = await axios.get(`http://127.0.0.1:3000/reservation/reservationDetails/${id}`);
+        setReservation(res.data);
+      } catch (error) {
+        console.error('Error fetching reservation data:', error);
+      }
+    };
+
+    fetchReservationDetails();
+  }, [id]);
+
+  // Compute deadline from reservation time
+  useEffect(() => {
+    if (reservation?.Date_Reservation) {
+      const reservationDate = new Date(reservation.Date_Reservation);
+      const deadlineDate = new Date(reservationDate.getTime() + 72 * 60 * 60 * 1000);
+      setDeadline(deadlineDate);
+    }
+  }, [reservation]);
+
+
+
+  
+
+  // Print handler
+  const handlePrint = () => {
+    const printContent = printRef.current;
+    const win = window.open('', '', 'width=800,height=600');
+
+    if (win && printContent) {
+      win.document.write(`
+        <html>
+          <head>
+            <title>Print Confirmation</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                background: white;
+                color: black;
+              }
+              .bg-light {
+                background-color: #f8f9fa;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: 0.25rem;
+              }
+              h6 {
+                margin-bottom: 0.5rem;
+                font-size: 16px;
+                color: #333;
+              }
+              p {
+                margin: 0.25rem 0;
+              }
+            </style>
+          </head>
+          <body>
+            ${printContent.innerHTML}
+          </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      win.print();
+      win.close();
+    }
+  };
+
+  const getHoursLeft = (): number => {
+    if (!deadline) return 0;
+    const now = new Date();
+    const diffMs = deadline.getTime() - now.getTime();
+    if (diffMs <= 0) return 0;
+    return Math.ceil(diffMs / (1000 * 60 * 60)); // Round up to next hour
+  };
+
+  const breadcrumbs = [{ label: 'Cruise Booking Confirmation', active: true }];
+
   return (
     <>
-    <Breadcrumb
-        title="Cruise"
+      <Breadcrumb
+        title="Cruise Booking Confirmation"
         breadcrumbs={breadcrumbs}
         backgroundClass="breadcrumb-bg-06"
-    />
-    <div className="content">
-		<div className="container">
+        backgroundImage="http://localhost:3000/assets/img/bgTourList.webp"
+      />
+      <div ref={printRef}>
+        <div className="content">
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-10">
+                <div className="card booking-confirmation mb-0">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                      <h5>Booking Confirmation</h5>
+                      <button className="btn btn-outline-primary" onClick={handlePrint}>
+                        <i className="isax isax-printer me-2" />
+                        Print Confirmation
+                      </button>
+                    </div>
 
-			{/* Booking Confirmation */}
-			<div className="row justify-content-center">
-				<div className="col-lg-10">
-					<div className="card booking-confirmation mb-0">
-						<div className="card-body">
-							<div className="bg-light-200 border border-light p-3 rounded-2 mb-4">
-								<div className="d-flex flex-wrap align-items-center justify-content-between ">
-									<div className="d-flex flex-wrap align-items-center booking-hotels">
-										<Link to={routes.cruiseDetails} className="avatar avatar-lg me-2">
-											<ImageWithBasePath src="assets/img/cruise/cruise-15.jpg" alt="image" className="img-fluid  rounded-circle"/>
-										</Link>
-										<div className="booking-details">
-											<h6 className="mb-1"><Link to={routes.cruiseDetails}>Carnival Cruise Line</Link></h6>
-											<div className="d-flex flex-wrap align-items-center booking-items">
-												<p className="fs-14 text-gray-6 pe-2 border-end border-light d-flex align-items-center me-2 ">
-													<i className="isax isax-ship me-2"></i>Luxury Cruise
-												</p>
-												<p className="fs-14 text-gray-6 pe-2 border-end border-light d-flex align-items-center me-2 ">
-													<i className="isax isax-location5 me-1"></i>15/C Prince Dareen Road, New
-													York
-												</p>
-												<p className="fs-14 text-gray-6 pe-2 border-end border-light d-flex align-items-center me-2 ">
-													<span className="badge badge-warning text-gray-9 me-1">5.0</span>(400
-													Reviews)
-												</p>
-											</div>
-										</div>
-									</div>
-									<div>
-										<span className="badge badge-info status rounded-pill p-2 fs-10 d-flex align-items-center">Upcoming</span>
-									</div>
-								</div>
-							</div>
-							<div className="pb-4 border-bottom mb-4">
-								<h6 className="mb-2">Cabin Details</h6>
-								<div className="row g-3">
-									<div className="col-lg-3">
-										<h6 className="fs-14">Cabin Type</h6>
-										<p className="text-gray-6 fs-16 ">Suite</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14">No of Rooms</h6>
-										<p className="text-gray-6 fs-16 ">1</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14">Room Price </h6>
-										<p className="text-gray-6 fs-16 ">$400</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14">Guests</h6>
-										<p className="text-gray-6 fs-16 ">4 Adults, 2 Child</p>
-									</div>
-								</div>
-							</div>
-							<div className="pb-4 border-bottom mb-4">
-								<h6 className="mb-2">Booking Info</h6>
-								<div className="row g-3">
-									<div className="col-lg-3">
-										<h6 className="fs-14">From</h6>
-										<p className="text-gray-6 fs-16 ">Las Vegas</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14">To </h6>
-										<p className="text-gray-6 fs-16 ">Newyork</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14">No of Days</h6>
-										<p className="text-gray-6 fs-16 ">4 Days, 5 Nights</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14">Departure Date & Time</h6>
-										<p className="text-gray-6 fs-16 ">20 May 2024, 10:50 AM</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14">Checkout Date & Time</h6>
-										<p className="text-gray-6 fs-16 ">25 May 2024, 10:50 AM</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14">Booked On</h6>
-										<p className="text-gray-6 fs-16 ">15 May 2024</p>
-									</div>
-								</div>
-							</div>
-							<div className="pb-4 border-bottom mb-4">
-								<h6 className="mb-2">Extra Service Info</h6>
-								<div className="d-flex flex-wrap align-items-center service-info gap-3">
-									<span className="badge badge-light rounded-pill">Custom Service</span>
-									<span className="badge badge-light rounded-pill">Pickup & Drop</span>
-									<span className="badge badge-light rounded-pill">Breakfast</span>
-								</div>
-							</div>
-							<div className="pb-4 border-bottom mb-4">
-								<h6 className="mb-2">Billing Info</h6>
-								<div className="row g-3">
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Name</h6>
-										<p className="fs-16 text-gray-6">Chris Foxy</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Email</h6>
-										<p className="fs-16 text-gray-6">chrfo2356@example.com</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Phone</h6>
-										<p className="fs-16 text-gray-6">+1 12656 26654</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Address</h6>
-										<p className="fs-16 text-gray-6">15/C Prince Road, New York</p>
-									</div>
-								</div>
-							</div>
-							<div>
-								<h6 className="mb-2">Order Info</h6>
-								<div className="row g-3">
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Order Id</h6>
-										<p className="fs-16 text-primary">#45669</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Payment Method</h6>
-										<p className="fs-16 text-gray-6">Credit Card (Visa)</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Payment Status</h6>
-										<p className="fs-16 text-success">Paid</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Date of Payment</h6>
-										<p className="fs-16 text-gray-6">20 May 2024, 10:50 AM</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Tax</h6>
-										<p className="fs-16 text-gray-6">15% ($60)</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Discount</h6>
-										<p className="fs-16 text-gray-6">20% ($15)</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Booking Fees</h6>
-										<p className="fs-16 text-gray-6">$25</p>
-									</div>
-									<div className="col-lg-3">
-										<h6 className="fs-14 mb-1">Total Paid</h6>
-										<p className="fs-16 text-gray-6">$6569</p>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			{/* / Booking Confirmation */}
+                    {!reservation && (
+                      <div className="text-center my-5">
+                        <p>Loading reservation details...</p>
+                      </div>
+                    )}
 
-		</div>
-	</div>
+                    {reservation && (
+                      <>
+                        <div className="bg-light p-3 rounded mb-4">
+                          <h6 className="mb-2">Reservation Summary</h6>
+                          <p><strong>Reservation Number:</strong> {reservation.Num_Reservation}</p>
+                          <p><strong>Status:</strong> <span className="text-warning">{reservation.Status}</span></p>
+                          <p><strong>Date:</strong> {new Date(reservation.Date_Reservation).toLocaleString()}</p>
+                          <p><strong>Number of Travelers:</strong> {reservation.nbr_place}</p>
+                          <p><strong>Total Price:</strong> {reservation.totalPrice} TND </p>
+                        </div>
+
+                        <div className="bg-light p-3 rounded mb-4">
+                          <h6 className="mb-2">Voyageurs</h6>
+                          {reservation.voyageurs?.length > 0 ? (
+                            reservation.voyageurs.map((v: any, index: number) => (
+                              <div key={index} className="mb-2">
+                                <p><strong>Name:</strong> {v.prenom} {v.Nom}</p>
+                                <p><strong>Email:</strong> {v.email}</p>
+                                <p><strong>Weight:</strong> {v.poids} kg</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p>No voyageur data available.</p>
+                          )}
+                        </div>
+
+                        <div className="bg-light p-3 rounded mb-4">
+                          <h6 className="mb-2">Circuit & Vol Info</h6>
+                          <p><strong>Circuit:</strong> {reservation.circuit?.Nom}</p>
+                          <p><strong>Vol Date:</strong>{moment.utc(reservation.vol?.Date_depart).format("MM/DD/YYYY, h:mm A")}</p>
+                        </div>
+
+                        <div className="bg-light p-3 rounded mb-4">
+                          <h6 className="mb-2">Payment Info</h6>
+                          <p><strong>Method:</strong> {reservation.paiement?.method || 'Guichet'}</p>
+                          <p><strong>Status:</strong> {reservation.paiement?.statut || 'en attente'}</p>
+                          <p><strong>Paid Amount:</strong> {reservation.paiement?.montant || 0}</p>
+                        </div>
+
+                        {reservation.Status === 'en attente' && (
+                          <div className="bg-warning-subtle p-3 rounded">
+                            <h6 className="text-warning">Important</h6>
+                            <p>
+                              You have <strong>{getHoursLeft()}</strong> hour{getHoursLeft() !== 1 ? 's' : ''} to pay at the nearest guichet.
+                              Otherwise, your reservation will be automatically canceled.
+                            </p>
+                            {deadline && (
+                              <p className="text-muted">
+                                Deadline: {deadline.toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default CruiseBookingConfirmation
+export default CruiseBookingConfirmation;

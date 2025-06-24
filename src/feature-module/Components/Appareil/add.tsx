@@ -60,13 +60,13 @@ const Addappareil = () => {
   //Breadcrumb Data
   const breadcrumbs = [
     {
-      label: 'Add Appareil',
+      label: 'Add Device',
       active: false,
-      link: routes.home1
+      link: routes.home5
     },
 
     {
-      label: 'Add Appareil',
+      label: 'Add Device',
       active: true,
     },
   ];
@@ -78,7 +78,7 @@ const Addappareil = () => {
 
   return (
     <>
-      <Breadcrumb title="Add Appareil" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-05" />
+      <Breadcrumb title="Add Device" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-05" backgroundImage="http://localhost:3000/assets/img/bgTourList.webp"/>
       <div className="content">
         <div className="container">
           <div className="place-nav">
@@ -92,7 +92,7 @@ const Addappareil = () => {
                   aria-selected="true"
                   role="tab"
                 >
-                  Add New Flight
+                  Add Device
                 </Link>
               </li>
             </ul>
@@ -110,7 +110,7 @@ const Addappareil = () => {
                   <div className="card border-0 mb-4 mb-lg-0 theiaStickySidebar">
                     <div className="card-body">
                       <div>
-                        <h5 className="mb-3">Add Appareil</h5>
+                        <h5 className="mb-3">Add Device</h5>
                         <ul className="add-tab-list">
                           <li>
                             <a href="#basic_info" className="active" id='list-example'> Basic Info </a>

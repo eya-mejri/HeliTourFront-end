@@ -36,12 +36,7 @@ const TotaleCard =()=>{
                     </span>
                     <p className="text-white mb-1">Total Earning This Month</p>
                     <h3 className="text-white mb-1">$ {amount}</h3>
-                    <Link
-                        to="#"
-                        className="text-decoration-underline text-white"
-                    >
-                        View Transactions
-                    </Link>
+                   
                 </div>
             </div>
         </div>

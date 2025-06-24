@@ -1,5 +1,5 @@
-export interface DatatableProps {
-    columns: any[]; // You can replace `any[]` with the specific type of columns you expect
-    dataSource: any[]; // You can replace `any[]` with the specific type of dataSource you expect
-    Selection?: boolean | undefined;
-  }
+import { TableProps } from "antd";
+
+export interface DatatableProps<T = any> extends TableProps<T> {
+  Selection?: boolean;
+}

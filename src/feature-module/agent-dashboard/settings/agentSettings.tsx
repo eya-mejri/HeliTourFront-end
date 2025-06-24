@@ -6,19 +6,20 @@ import { Link } from 'react-router-dom';
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import CustomSelect from '../../../core/common/commonSelect';
 import { City, CountryOption, State } from '../../../core/common/selectOption/json/selectOption';
-
 interface UserInfo {
     Nom: string;
     Prenom: string;
     Email: string;
-    Num_Telephone: number;
+    Num_Telephone: number | string;
     Adresse: {
+        _id: string;
         Pays: string;
         Ville: string;
         Code_Postal: string;
         Adresse_Locale: string;
     };
 }
+
 
 const AgentSettings = () => {
     const routes = all_routes;
@@ -41,12 +42,13 @@ const AgentSettings = () => {
                         'Content-Type': 'application/json',
                     },
                 });
-
+                
                 if (!response.ok) {
                     throw new Error('Failed to fetch user info');
                 }
 
                 const data = await response.json();
+                console.log(data)
                 setUserInfo(data); // Store the fetched user info in state
             } catch (error) {
                 console.error('Error fetching user info:', error);
@@ -88,16 +90,43 @@ const AgentSettings = () => {
             return;
         }
 
-        const response = await fetch('http://localhost:3000/utilisateur/updateProfile', {
+        // 1. Update address first
+        const addressRes = await fetch(
+            `http://localhost:3000/adresse/update/${userInfo?.Adresse._id}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userInfo?.Adresse),
+            }
+        );
+
+        if (!addressRes.ok) {
+            throw new Error('Failed to update address');
+        }
+
+        const updatedAddress = await addressRes.json();
+
+        // 2. Update user with the updated address ID
+        const userUpdateData = {
+            Nom: userInfo?.Nom,
+            Prenom: userInfo?.Prenom,
+            Email: userInfo?.Email,
+            Num_Telephone: userInfo?.Num_Telephone,
+            Adresse: updatedAddress._id, // Only ID
+        };
+
+        const userRes = await fetch('http://localhost:3000/utilisateur/updateProfile', {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(userInfo), // Send updated user info including address
+            body: JSON.stringify(userUpdateData),
         });
 
-        if (!response.ok) {
+        if (!userRes.ok) {
             throw new Error('Failed to update profile');
         }
 
@@ -107,6 +136,7 @@ const AgentSettings = () => {
         alert('Failed to update profile');
     }
 };
+
 
     // Breadcrumb Data
     const breadcrumbs = [
@@ -158,14 +188,7 @@ const AgentSettings = () => {
                                             <i className="isax isax-wallet-money me-2" />
                                             Admins listing
                                         </Link>
-                                        {/*<Link to={routes.agentSecuritySettings}>
-                                            <i className="isax isax-shield-tick me-2" />
-                                            Security
-                                        </Link>
-                                        <Link to={routes.agentPlanSettings}>
-                                            <i className="isax isax-star me-2" />
-                                            Plans &amp; Billing
-                                        </Link>*/}
+                                       
                                     </div>
                                     {/* Settings Content */}
                                     <form onSubmit={handleSubmit}>
@@ -174,43 +197,12 @@ const AgentSettings = () => {
                                             <div className="row gy-2">
                                                 <div className="col-lg-12">
                                                     <div className="d-flex align-items-center">
-                                                        {/*<ImageWithBasePath
-                                                            src="assets/img/users/user-lg-26.jpg"
-                                                            alt="image"
-                                                            className="img-fluid avatar avatar-xxl br-10 flex-shrink-0 me-3"
-                                                        />
-                                                        <div>
-                                                            <p className="fs-14 text-gray-6 fw-normal mb-2">
-                                                                Recommended dimensions are typically 400 x 400
-                                                                pixels.
-                                                            </p>
-                                                            <div className="d-flex align-items-center">
-                                                                <div className="me-2">
-                                                                    <label
-                                                                        className="upload-btn"
-                                                                        htmlFor="fileUpload"
-                                                                    >
-                                                                        Upload
-                                                                    </label>
-                                                                    <input
-                                                                        type="file"
-                                                                        id="fileUpload"
-                                                                        style={{ display: "none" }}
-                                                                    />
-                                                                </div>
-                                                                <Link
-                                                                    to="#"
-                                                                    className="btn btn-light btn-md"
-                                                                >
-                                                                    Remove
-                                                                </Link>
-                                                            </div>
-                                                        </div>*/}
+                                                       
                                                     </div>
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Nom</label>
+                                                        <label className="form-label">Last Name</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -222,7 +214,7 @@ const AgentSettings = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Prenom</label>
+                                                        <label className="form-label">First name</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -246,7 +238,7 @@ const AgentSettings = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Numéro de Téléphone</label>
+                                                        <label className="form-label">Phone number</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -264,7 +256,7 @@ const AgentSettings = () => {
                                             <div className="row gy-2">
                                                 <div className="col-lg-12">
                                                     <div>
-                                                        <label className="form-label">Adresse Locale</label>
+                                                        <label className="form-label">Local Address</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -276,7 +268,7 @@ const AgentSettings = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Pays</label>
+                                                        <label className="form-label">Country</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -288,7 +280,7 @@ const AgentSettings = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Ville</label>
+                                                        <label className="form-label">City</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -300,7 +292,7 @@ const AgentSettings = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Code Postal</label>
+                                                        <label className="form-label">Postal code</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"

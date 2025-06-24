@@ -60,13 +60,13 @@ const AddFlight = () => {
   //Breadcrumb Data
   const breadcrumbs = [
     {
-      label: 'Add Appareil',
+      label: 'Add Device',
       active: false,
       link: routes.home1
     },
 
     {
-      label: 'Add Appareil',
+      label: 'Add Device',
       active: true,
     },
   ];
@@ -78,7 +78,7 @@ const AddFlight = () => {
 
   return (
     <>
-      <Breadcrumb title="Add Appareil" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-05" />
+      <Breadcrumb title="Add Device" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-05" backgroundImage="http://localhost:3000/assets/img/bgTourList.webp" />
       <div className="content">
         <div className="container">
           <div className="place-nav">

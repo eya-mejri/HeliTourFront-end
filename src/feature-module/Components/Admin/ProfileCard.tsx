@@ -46,6 +46,7 @@ const ProfileCard = () => {
                         'Content-Type': 'application/json',
                     },
                 });
+                console.log(response)
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch user info');
@@ -87,13 +88,7 @@ const ProfileCard = () => {
             </p>
             <div className="d-flex align-items-center justify-content-center notify-item">
                 <NotiIcon/>
-                {/*<Link
-                    to={routes.agentChat}
-                    className="rounded-circle btn btn-white d-flex align-items-center justify-content-center p-0 position-relative"
-                >
-                    <i className="isax isax-message-square5 fs-20" />
-                    <span className="position-absolute p-1 bg-danger rounded-circle" />
-                </Link>*/}
+                
             </div>
         </div>
     )

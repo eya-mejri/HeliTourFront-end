@@ -86,7 +86,7 @@ const Register = () => {
         Email: formData.Email,
         Num_Telephone: formData.Num_Telephone,
         MDP: formData.MDP,
-        RoleNom: formData.RoleNom,
+        RoleNom: "Client",
         AdresseData: formData.AdresseData
       });
 
@@ -119,7 +119,7 @@ const Register = () => {
             <div className="card-header">
               <div className="text-center">
                 <h5 className="mb-1">Sign Up</h5>
-                <p>Create your DreamsTour Account</p>
+                <p>Create your HeliTour Account</p>
               </div>
             </div>
             <div className="card-body">
@@ -197,18 +197,7 @@ const Register = () => {
                     />
                   </div>
                 </div>
-                <div className="mb-3">
-                  <label className="form-label">Account Type</label>
-                  <select
-                    className="form-select form-control-lg"
-                    value={formData.RoleNom}
-                    onChange={handleRoleChange}
-                    required
-                  >
-                    <option value="Client">Client</option>
-                    <option value="Agence">Agency</option>
-                  </select>
-                </div>
+                
                 <div className="mb-3">
                   <label className="form-label">Country</label>
                   <input
@@ -338,33 +327,7 @@ const Register = () => {
                     )}
                   </button>
                 </div>
-                <div className="login-or mb-3">
-                  <span className="span-or">Or</span>
-                </div>
-                <div className="d-flex align-items-center mb-3">
-                  <button
-                    type="button"
-                    className="btn btn-light flex-fill d-flex align-items-center justify-content-center me-2"
-                  >
-                    <ImageWithBasePath
-                      src="assets/img/icons/google-icon.svg"
-                      className="me-2"
-                      alt="Google"
-                    />
-                    Google
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-light flex-fill d-flex align-items-center justify-content-center"
-                  >
-                    <ImageWithBasePath
-                      src="assets/img/icons/fb-icon.svg"
-                      className="me-2"
-                      alt="Facebook"
-                    />
-                    Facebook
-                  </button>
-                </div>
+                
                 <div className="d-flex justify-content-center">
                   <p className="fs-14">
                     Already have an account?{" "}

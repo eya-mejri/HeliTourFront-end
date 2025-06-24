@@ -1,14 +1,58 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ImageWithBasePath from '../../core/common/imageWithBasePath'
 import { Link, Routes } from 'react-router-dom'
 import Slider from 'react-slick';
 import CountUp from 'react-countup'
 import { all_routes } from '../router/all_routes';
-
+import axios from 'axios';
+interface StatsData {
+    villeCount: number;
+    confirmedReservationCount: number;
+    userCount: number;
+    voyageurCount: number;
+  }
 const FeaturedCruise = () => {
 
     const routes = all_routes;
-
+    const [stats, setStats] = useState<StatsData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedItems, setSelectedItems] = useState(Array(10).fill(false));
+  
+    useEffect(() => {
+      const fetchStats = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/reservation/counts');
+          setStats(response.data);
+        } catch (error) {
+          console.error('Error fetching statistics:', error);
+          // Fallback values if API fails
+          setStats({
+            villeCount: 50,
+            confirmedReservationCount: 7000,
+            userCount: 100,
+            voyageurCount: 89
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchStats();
+    }, []);
+  
+    if (loading) {
+      return (
+        <section className="section pt-0 mt-5">
+          <div className="container">
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
     const CustomNextArrow = ({ className, onClick }: any) => (
         <div className="owl-nav">
         <button type="button" role="presentation" className="owl-next"  onClick={onClick}>
@@ -113,20 +157,14 @@ const FeaturedCruise = () => {
         ],
     };
 
-     const [selectedItems, setSelectedItems] = useState(Array(10).fill(false));
-        const handleItemClick = (index: number) => {
-            setSelectedItems((prevSelectedItems) => {
-                const updatedSelectedItems = [...prevSelectedItems];
-                updatedSelectedItems[index] = !updatedSelectedItems[index];
-                return updatedSelectedItems;
-            });
-        };
+     
+        
 
   return (
    
     <>
        {/* Cruise Section */}
-    <section className="section place-section  bgwhite">
+    {/*<section className="section place-section  bgwhite">
         <div className="container">
             <div className="row justify-content-center">
                 <div className="col-xl-5 col-lg-10 text-center aos" data-aos="fade-up">
@@ -136,10 +174,10 @@ const FeaturedCruise = () => {
                     </div>
                 </div>
             </div>
-            {/* Cruise List */}
+            
             <div className="owl-carousel place-slider nav-center  aos"data-aos="fade-up">
             <Slider {...placeSectionSlick}>
-                {/* Place Item*/}
+                
                 <div className="place-item border mb-4">
                     <div className="place-img">
                         <div className="img-slider image-slide owl-carousel nav-center">
@@ -207,9 +245,9 @@ const FeaturedCruise = () => {
                         </div>
                     </div>
                 </div>
-                {/* /Place Item*/}
+                {/* /Place Item*
 
-                {/* Place Item*/}
+                {/* Place Item*
                 <div className="place-item border mb-4">
                     <div className="place-img">
                         <div className="img-slider image-slide owl-carousel nav-center">
@@ -277,9 +315,9 @@ const FeaturedCruise = () => {
                         </div>
                     </div>
                 </div>
-                {/* /Place Item*/}
+                {/* /Place Item*
 
-                {/* Place Item*/}
+                {/* Place Item*
                 <div className="place-item border mb-4">
                     <div className="place-img">
                         <div className="img-slider image-slide owl-carousel nav-center">
@@ -347,9 +385,9 @@ const FeaturedCruise = () => {
                         </div>
                     </div>
                 </div>
-                {/* /Place Item*/}
+                {/* /Place Item*
 
-                {/* Place Item*/}
+                {/* Place Item*
                 <div className="place-item border mb-4">
                     <div className="place-img">
                         <div className="img-slider image-slide owl-carousel nav-center">
@@ -417,9 +455,9 @@ const FeaturedCruise = () => {
                         </div>
                     </div>
                 </div>
-                {/* /Place Item*/}
+                {/* /Place Item*
 
-                {/* Place Item*/}
+                {/* Place Item*
                 <div className="place-item border mb-4">
                     <div className="place-img">
                         <div className="img-slider image-slide owl-carousel nav-center">
@@ -487,56 +525,72 @@ const FeaturedCruise = () => {
                         </div>
                     </div>
                 </div>
-                {/* /Place Item*/}
+                {/* /Place Item*
                 </Slider>
             </div>
-            {/* /Cruise List */}
+            {/* /Cruise List *
 
             <div className="text-center view-all aos" data-aos="fade-up">
                 <Link to={routes.cruiseList} className="btn btn-primary">View All<i className="isax isax-arrow-right-3 ms-2"></i></Link>
             </div>
         </div>
-    </section>
+    </section>*/}
     {/* /Cruise Section */}
 
     {/* Counter Section */}
-    <section className="section pt-0">
-        <div className="container">
-            <div className="row">
-                <div className="col-12">
-                    <div className="rating-feedback  aos" data-aos="fade-up">
-                        <div className="bg-div">
-                            <ImageWithBasePath src="assets/img/bg/bg-02.png" className="bg-2" alt="img" />
-                        </div>
-                        <ul>
-                            <li>
-                                <h6><i className="isax isax-global me-2"></i>Destinations Worldwide</h6>
-                                <h4><span className="counter"><CountUp end={50} /></span>+</h4>
-                            </li>
-                            <li>
-                                <h6><i className="isax isax-calendar-2  me-2"></i>Booking Completed</h6>
-                                <h4><span className="counter"><CountUp end={7000} /></span> +</h4>
-                            </li>
-                            <li>
-                                <h6><i className="isax isax-tag-user me-2"></i>Client Globally</h6>
-                                <h4><span className="counter"><CountUp end={100} /></span> +</h4>
-                            </li>
-                            <li>
-                                <h6><i className="isax isax-status-up me-2"></i>Providers Registered</h6>
-                                <h4><span className="counter"><CountUp end={89} /></span> +</h4>
-                            </li>
-                        </ul>
-                        <div className="bg-div">
-                            <ImageWithBasePath src="assets/img/bg/bg-01.png" className="bg-1" alt="img" />
-                        </div>
-                    </div>
-                </div>
+    <section className="section pt-0 mt-5">
+      <div className="container">
+        <div className="row">
+          <div className="col-12">
+            <div className="rating-feedback aos" data-aos="fade-up">
+              <div className="bg-div">
+                <ImageWithBasePath src="assets/img/bg/bg-02.png" className="bg-2" alt="img" />
+              </div>
+              <ul>
+                <li>
+                  <h6><i className="isax isax-global me-2"></i>Destinations</h6>
+                  <h4>
+                    <span className="counter">
+                      <CountUp end={stats?.villeCount || 50} />+
+                    </span>
+                  </h4>
+                </li>
+                <li>
+                  <h6><i className="isax isax-calendar-2 me-2"></i>Booking Completed</h6>
+                  <h4>
+                    <span className="counter">
+                      <CountUp end={stats?.confirmedReservationCount || 7000} />+
+                    </span>
+                  </h4>
+                </li>
+                <li>
+                  <h6><i className="isax isax-tag-user me-2"></i>Client Globally</h6>
+                  <h4>
+                    <span className="counter">
+                      <CountUp end={stats?.userCount || 100} />+
+                    </span>
+                  </h4>
+                </li>
+                <li>
+                  <h6><i className="isax isax-status-up me-2"></i>Travelers</h6>
+                  <h4>
+                    <span className="counter">
+                      <CountUp end={stats?.voyageurCount || 89} />+
+                    </span>
+                  </h4>
+                </li>
+              </ul>
+              <div className="bg-div">
+                <ImageWithBasePath src="assets/img/bg/bg-01.png" className="bg-1" alt="img" />
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </section>
      {/* /Counter Section */}
     </>
   )
 }
 
-export default FeaturedCruise
+export default FeaturedCruise;

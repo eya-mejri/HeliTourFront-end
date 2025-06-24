@@ -1,591 +1,370 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../../core/common/Breadcrumb/breadcrumb';
-import FliterSidebar from '../curise-grid/fliterSidebar'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import Slider from 'react-slick';
 import { all_routes } from '../../router/all_routes';
-import CruiseSearch from '../cruiseSearch';
+import axios from 'axios';
+import FormSearch from '../../home-five/FormSearch';
+
+interface Ville {
+    _id: string;
+    Nom: string;
+    Description: string;
+}
+
+interface Circuit {
+    _id: string;
+    Nom: string;
+    Description: string;
+    Prix: number;
+    Disponibilite: boolean;
+    villeId: string;
+    photos?: string[]; // matches your backend
+
+}
 
 const CruiseList = () => {
-    const routes = all_routes
-    //Breadcrumb Data
-    const breadcrumbs = [
-        {
-            label: 'Cruise',
-            link: routes.home1,
-            active: false,
-        },
-        {
-            label: 'Cruise',
-            active: true,
-        },
-        {
-            label: 'Cruise Grid',
-            active: true,
-        },
-    ];
+    const routes = all_routes;
+    const navigate = useNavigate();
+    const [circuits, setCircuits] = useState<Circuit[]>([]);
+    const [villes, setVilles] = useState<Record<string, Ville>>({});
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedItems, setSelectedItems] = useState<boolean[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [circuitsPerPage] = useState(5);
 
-    //ImageSlider
-    const imgslideroption = {
-        dots: true,
-        arrows: true,
-        infinite: true,
-        speed: 2000,
-        autoplay: false,
-        swipe: true,
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        responsive: [
-            {
-                breakpoint: 1400,
-                settings: {
-                    slidesToShow: 1,
-                },
-            },
-            {
-                breakpoint: 1300,
-                settings: {
-                    slidesToShow: 1,
-                },
-            },
-            {
-                breakpoint: 992,
-                settings: {
-                    slidesToShow: 1,
-                },
-            },
-            {
-                breakpoint: 576,
-                settings: {
-                    slidesToShow: 1,
-                },
-            },
-            {
-                breakpoint: 0,
-                settings: {
-                    slidesToShow: 1,
-                },
-            },
-        ],
+    // Fonction déplacée à l'intérieur du composant
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                
+                // 1. Correction du endpoint des villes
+                const [circuitsResponse, villesResponse] = await Promise.all([
+                    axios.get<Circuit[]>('http://localhost:3000/circuit/getall'),
+                    axios.get<Ville[]>('http://localhost:3000/ville/getall') // Changé à 'villes' pluriel
+                ]);
+
+                // 2. Vérification des données reçues
+                console.log('Circuits:', circuitsResponse.data);
+                console.log('Villes:', villesResponse.data);
+
+                const villesDict = villesResponse.data.reduce((acc, ville) => {
+                    acc[ville._id] = ville;
+                    return acc;
+                }, {} as Record<string, Ville>);
+
+                // 3. Vérification du dictionnaire créé
+                console.log('Dictionnaire des villes:', villesDict);
+
+                setVilles(villesDict);
+                setCircuits(circuitsResponse.data);
+                setSelectedItems(new Array(circuitsResponse.data.length).fill(false));
+            } catch (err) {
+                console.error('Error:', err);
+                setError('Échec du chargement des données. Veuillez réessayer.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchData();
+    }, []);
+
+    // 4. Ajout d'une vérification de chargement des villes
+    const getVilleNom = (villeId: string) => {
+        if (!villes) return 'Chargement...'; // Ajouté
+        const ville = villes[villeId];
+        return ville?.Nom || 'Ville inconnue';
+    };
+    // Handle circuit click - navigation to details
+    const handleCircuitClick = (circuitId: string) => {
+        navigate(`/circuit/${circuitId}`);
     };
 
-    const [selectedItems, setSelectedItems] = useState(Array(10).fill(false));
-    const handleItemClick = (index: number) => {
-        setSelectedItems((prevSelectedItems) => {
-            const updatedSelectedItems = [...prevSelectedItems];
-            updatedSelectedItems[index] = !updatedSelectedItems[index];
-            return updatedSelectedItems;
-        });
+    // Handle favorite click
+    const handleFavoriteClick = (index: number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const newSelectedItems = [...selectedItems];
+        newSelectedItems[index] = !newSelectedItems[index];
+        setSelectedItems(newSelectedItems);
     };
 
+    // Pagination logic
+    const indexOfLastCircuit = currentPage * circuitsPerPage;
+    const indexOfFirstCircuit = indexOfLastCircuit - circuitsPerPage;
+    const currentCircuits = circuits.slice(indexOfFirstCircuit, indexOfLastCircuit);
+
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(circuits.length / circuitsPerPage); i++) {
+        pageNumbers.push(i);
+    }
+
+    if (loading) {
+        return (
+            <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <p>Loading tours...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-5">
+                <div className="alert alert-danger">{error}</div>
+                <button 
+                    className="btn btn-primary"
+                    onClick={() => window.location.reload()}
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
+  
     return (
         <>
             <Breadcrumb
-                title="Cruise"
-                breadcrumbs={breadcrumbs}
+                title="Tour List"
+                breadcrumbs={[
+                    { label: 'Tours', link: routes.home1, active: false },
+                    { label: 'Tour List', active: true }
+                ]}
                 backgroundClass="breadcrumb-bg-06"
+                backgroundImage="http://localhost:3000/assets/img/bgTourList.webp"
             />
+            
+            
             <div className="content">
                 <div className="container">
-                    <CruiseSearch />
-
-                    <div className="row">
-
+                    <FormSearch />
+                    <div className="row mt-5"></div>
+                   
+                    <div className="row mt-5">
                         {/* Sidebar */}
-                        <div className="col-xl-3 col-lg-4 ">
-                            <FliterSidebar />
+                        <div className="col-xl-3 col-lg-4">
+                            
                         </div>
-                        {/* /Sidebar */}
-
-                        <div className="col-xl-9 col-lg-8 theiaStickySidebar">
-                            <div className="d-flex align-items-center justify-content-between flex-wrap">
-                                <h6 className="mb-3">1920 Cruises Found on Your Search</h6>
+                        
+                        {/* Main Content */}
+                        <div className="col-xl-12 col-lg-12 theiaStickySidebar">
+                            <div className="d-flex align-items-center justify-content-between flex-wrap mb-4">
+                                <h6 className="mb-0">{circuits.length} Tours Found</h6>
                                 <div className="d-flex align-items-center flex-wrap">
-                                    <div className="list-item d-flex align-items-center mb-3">
-                                        <Link to={routes.cruiseGrid} className="list-icon me-2"><i className="isax isax-grid-1"></i></Link>
-                                        <Link to={routes.cruiseList} className="list-icon active me-2"><i className="isax isax-firstline"></i></Link>
-                                        <Link to={routes.cruiseMap} className="list-icon me-2"><i className="isax isax-map-1"></i></Link>
-                                    </div>
-                                    <div className="dropdown mb-3">
-                                        <Link to="#" className="dropdown-toggle py-2" data-bs-toggle="dropdown" >
-                                            <span className="fw-medium text-gray-9">Sort By : </span>Recommended
+                                    {/*<div className="list-item d-flex align-items-center mb-3">
+                                        <Link to={routes.cruiseGrid} className="list-icon me-2">
+                                            <i className="isax isax-grid-1"></i>
+                                        </Link>
+                                        <Link to={routes.cruiseList} className="list-icon active me-2">
+                                            <i className="isax isax-firstline"></i>
+                                        </Link>
+                                        <Link to={routes.cruiseMap} className="list-icon me-2">
+                                            <i className="isax isax-map-1"></i>
+                                        </Link>
+                                    </div>*/}
+                                    {/*<div className="dropdown mb-3">
+                                        <Link to="#" className="dropdown-toggle py-2" data-bs-toggle="dropdown">
+                                            <span className="fw-medium text-gray-9">Sort By: </span>Recommended
                                         </Link>
                                         <div className="dropdown-menu dropdown-sm">
-                                            <form >
+                                            <form>
                                                 <h6 className="fw-medium fs-16 mb-3">Sort By</h6>
                                                 <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend1" defaultChecked />
+                                                    <input className="form-check-input ms-0 mt-0" type="radio" name="sort" id="recommend1" defaultChecked />
                                                     <label className="form-check-label ms-2" htmlFor="recommend1">Recommended</label>
                                                 </div>
                                                 <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend2" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend2">Price: low to high</label>
+                                                    <input className="form-check-input ms-0 mt-0" type="radio" name="sort" id="priceLow" />
+                                                    <label className="form-check-label ms-2" htmlFor="priceLow">Price: Low to High</label>
                                                 </div>
                                                 <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend3" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend3">Price: high to low</label>
-                                                </div>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend4" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend4">Newest</label>
-                                                </div>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend5" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend5">Ratings</label>
-                                                </div>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-0">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend6" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend6">Reviews</label>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-end border-top pt-3 mt-3">
-                                                    <Link to="#" className="btn btn-light btn-sm me-2">Reset</Link>
-                                                    <button type="submit" className="btn btn-primary btn-sm">Apply</button>
+                                                    <input className="form-check-input ms-0 mt-0" type="radio" name="sort" id="priceHigh" />
+                                                    <label className="form-check-label ms-2" htmlFor="priceHigh">Price: High to Low</label>
                                                 </div>
                                             </form>
                                         </div>
-                                    </div>
+                                    </div>*/}
                                 </div>
                             </div>
-                            <div className="bg-info br-10 p-3 pb-2 mb-4">
-                                <div className="d-flex align-items-center justify-content-between flex-wrap">
-                                    <p className="fs-14 fw-medium mb-2 d-inline-flex align-items-center"><i className="isax isax-info-circle me-2"></i>Save an average of 15% on thousands of cruise when you're signed in</p>
-                                    <Link to={routes.login} className="btn btn-white btn-sm mb-2">Sign In</Link>
-                                </div>
-                            </div>
+                            
+                            
+                            
                             <div className="hotel-list list-full">
                                 <div className="row justify-content-center">
-                                    <div className="col-md-12">
-                                        {/* Cruise List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-05.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-02.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-04.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-03.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={1}  onClick={() => handleItemClick(1)}>
-                                                    <Link to="#" className={`fav-icon ${selectedItems[1] ?'selected':''}`}>
-                                                        <i className="isax isax-heart5"></i>
-                                                    </Link>
-                                                    <span className="badge bg-info d-inline-flex align-items-center"><i className="isax isax-ranking me-1"></i>Trending</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="mb-1 text-truncate"><Link to={routes.cruiseDetails}>Super Aquamarine</Link></h5>
-                                                        <p className="d-flex align-items-center fs-14"><i className="isax isax-location5 me-2"></i>Ciutat Vella, Barcelona</p>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className="d-flex align-items-center overflow-hidden border-end pe-2 me-2">
-                                                            <span className="avatar avatar-sm flex-shrink-0 me-2">
-                                                                <ImageWithBasePath src="assets/img/users/user-08.jpg" className="rounded-circle" alt="img" />
-                                                            </span>
-                                                            <p className="fs-14 text-truncate">Beth Williams</p>
-                                                        </Link>
-                                                        <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium me-2">4.9</span>
-                                                        <p className="fs-14 text-truncate">(400)</p>
-                                                    </div>
-                                                </div>
-                                                <p className="fs-14 line-ellipsis mb-3">Embark on a luxurious cruise where breathtaking destinations meet world-class comfort and entertainment.</p>
-                                                <div className="d-flex align-items-center justify-content-between cruise-list-item border-top flex-wrap row-gap-2 pt-3 mb-3">
-                                                    <p className="fs-14 mb-0"><i className="isax isax-calendar-2 text-gray-6 me-1"></i>Year : <span className="text-dark fw-medium">2021</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-user me-1"></i>Guests : <span className="text-dark fw-medium">4</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-fatrows text-gray-6 me-1"></i>Width : <span className="text-dark fw-medium">88.47 m</span></p>
-                                                    <p className="fs-14"><i className="isax isax-flash-1 me-1"></i>Speed : <span className="text-dark fw-medium">19 Knots</span></p>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                    <h6 className="d-flex align-items-center"><i className="isax isax-home-wifi ms-2 me-2"></i><i className="isax isax-scissor me-2"></i><i className="isax isax-profile-2user me-2"></i><i className="isax isax-wind-2 me-2"></i><Link to="#" className="fs-14 fw-normal text-default d-inline-block">+2</Link></h6>
-                                                    <h5 className="text-primary text-nowrap me-2">$500 <span className="fs-14 fw-normal text-default">/ day</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Cruise List */}
+                                    <div className="col-md-12" >
+                                        {currentCircuits.length > 0 ? (
+                                            currentCircuits.map((circuit, index) => {
+                                                const globalIndex = (currentPage - 1) * circuitsPerPage + index;
+                                                return (
+                                                    <div 
+                                                        className="place-item mb-4" 
+                                                        key={circuit._id}
+                                                        onClick={() => handleCircuitClick(circuit._id)}
+                                                        
+                                                        style={{ height: '250px', width: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                                    >
+                                                       <div className="place-img" >
+                                                            <div className="img-slider image-slide owl-carousel nav-center">
+                                                                <div onClick={(e) => e.stopPropagation()}>
+                                                                <Slider
+                                                                    dots={true}
+                                                                    arrows={true}
+                                                                    infinite={true}
+                                                                    speed={500}
+                                                                    slidesToShow={1}
+                                                                    slidesToScroll={1}
+                                                                    autoplay={false}
+                                                                >
+                                                                    {(circuit.photos && circuit.photos.length > 0 ? circuit.photos : ['default.jpg']).map((photo, index) => (
+                                                                    <div className="slide-images" key={index} onClick={() => handleCircuitClick(circuit._id)}>
+                                                                        <ImageWithBasePath 
+                                                                        src={`http://localhost:3000/assets/img/circuits/${photo}`}
+                                                                        className="img-fluid"
+                                                                        alt={`${circuit.Nom} ${index + 1}`}
+                                                                        style={{ height: '250px', width: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                                                        />
+                                                                    </div>
+                                                                    ))}
+                                                                </Slider>
+                                                                </div>
 
-                                        {/* Cruise List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-12.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-09.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-07.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-03.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={2}  onClick={() => handleItemClick(2)}>
-                                                    <Link to="#" className={`fav-icon ${selectedItems[2] ?'selected':''}`}>
-                                                        <i className="isax isax-heart5"></i>
-                                                    </Link>
-                                                    <span className="badge bg-info d-inline-flex align-items-center"><i className="isax isax-ranking me-1"></i>Trending</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="mb-1 text-truncate"><Link to={routes.cruiseDetails}>Bonnie Yacht</Link></h5>
-                                                        <p className="d-flex align-items-center fs-14"><i className="isax isax-location5 me-2"></i>Oxford Street, London</p>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className="d-flex align-items-center overflow-hidden border-end pe-2  me-2">
-                                                            <span className="avatar avatar-sm flex-shrink-0 me-2">
-                                                                <ImageWithBasePath src="assets/img/users/user-09.jpg" className="rounded-circle" alt="img" />
-                                                            </span>
-                                                            <p className="fs-14 text-truncate">Tom Andrews</p>
-                                                        </Link>
-                                                        <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium me-2">4.7</span>
-                                                        <p className="fs-14 text-truncate">(300)</p>
-                                                    </div>
-                                                </div>
-                                                <p className="fs-14 line-ellipsis mb-3">Embark on a luxurious cruise where breathtaking destinations meet world-class comfort and entertainment.</p>
-                                                <div className="d-flex align-items-center justify-content-between cruise-list-item border-top flex-wrap row-gap-2 pt-3 mb-3">
-                                                    <p className="fs-14 mb-0"><i className="isax isax-calendar-2 text-gray-6 me-1"></i>Year : <span className="text-dark fw-medium">2020</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-user me-1"></i>Guests : <span className="text-dark fw-medium">3</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-fatrows text-gray-6 me-1"></i>Width : <span className="text-dark fw-medium">70.63 m</span></p>
-                                                    <p className="fs-14"><i className="isax isax-flash-1 me-1"></i>Speed : <span className="text-dark fw-medium">17 Knots</span></p>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                    <h6 className="d-flex align-items-center"><i className="isax isax-home-wifi ms-2 me-2"></i><i className="isax isax-scissor me-2"></i><i className="isax isax-profile-2user me-2"></i><i className="isax isax-wind-2 me-2"></i><Link to="#" className="fs-14 fw-normal text-default d-inline-block">+2</Link></h6>
-                                                    <h5 className="text-primary text-nowrap me-2">$400 <span className="fs-14 fw-normal text-default">/ day</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Cruise List */}
+                                                            </div>
 
-                                        {/* Cruise List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider owl-carousel nav-center h-100">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-09.jpg" className="img-fluid h-100" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-01.jpg" className="img-fluid h-100" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-08.jpg" className="img-fluid h-100" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-07.jpg" className="img-fluid h-100" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={3}  onClick={() => handleItemClick(3)}>
-                                                    <Link to="#" className={`fav-icon ${selectedItems[3] ?'selected':''}`}>
-                                                        <i className="isax isax-heart5"></i>
-                                                    </Link>
-                                                    <span className="badge bg-info d-inline-flex align-items-center"><i className="isax isax-ranking me-1"></i>Trending</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="mb-1 text-truncate"><Link to={routes.cruiseDetails}>Coral Cruiser</Link></h5>
-                                                        <p className="d-flex align-items-center fs-14"><i className="isax isax-location5 me-2"></i>Princes Street, Edinburgh</p>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className="d-flex align-items-center overflow-hidden border-end pe-2  me-2">
-                                                            <span className="avatar avatar-sm flex-shrink-0 me-2">
-                                                                <ImageWithBasePath src="assets/img/users/user-10.jpg" className="rounded-circle" alt="img" />
-                                                            </span>
-                                                            <p className="fs-14 text-truncate">Robert Cogswell</p>
-                                                        </Link>
-                                                        <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium me-2">4.5</span>
-                                                        <p className="fs-14 text-truncate">(320)</p>
-                                                    </div>
-                                                </div>
-                                                <p className="fs-14 line-ellipsis mb-3">Embark on a luxurious cruise where breathtaking destinations meet world-class comfort and entertainment.</p>
-                                                <div className="d-flex align-items-center justify-content-between cruise-list-item border-top flex-wrap row-gap-2 pt-3 mb-3">
-                                                    <p className="fs-14 mb-0"><i className="isax isax-calendar-2 text-gray-6 me-1"></i>Year : <span className="text-dark fw-medium">2017</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-user me-1"></i>Guests : <span className="text-dark fw-medium">4</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-fatrows text-gray-6 me-1"></i>Width : <span className="text-dark fw-medium">75.12 m</span></p>
-                                                    <p className="fs-14"><i className="isax isax-flash-1 me-1"></i>Speed : <span className="text-dark fw-medium">20 Knots</span></p>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                    <h6 className="d-flex align-items-center"><i className="isax isax-home-wifi ms-2 me-2"></i><i className="isax isax-scissor me-2"></i><i className="isax isax-profile-2user me-2"></i><i className="isax isax-wind-2 me-2"></i><Link to="#" className="fs-14 fw-normal text-default d-inline-block">+2</Link></h6>
-                                                    <h5 className="text-primary text-nowrap me-2">$550 <span className="fs-14 fw-normal text-default">/ day</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Cruise List */}
+                                                            {/* Favorite and Availability Tags */}
+                                                            <div 
+                                                                className="fav-item" 
+                                                                onClick={(e) => handleFavoriteClick(globalIndex, e)}
+                                                            >
+                                                                {/*<span className={`fav-icon ${selectedItems[globalIndex] ? 'selected' : ''}`}>
+                                                                <i className="isax isax-heart5"></i>
+                                                                </span>*/}
+                                                                {circuit.Disponibilite ? (
+                                                                <span className="badge bg-success d-inline-flex align-items-center">
+                                                                    <i className="isax isax-tick-circle me-1"></i>Available
+                                                                </span>
+                                                                ) : (
+                                                                <span className="badge bg-danger d-inline-flex align-items-center">
+                                                                    <i className="isax isax-close-circle me-1"></i>Unavailable
+                                                                </span>
+                                                                )}
+                                                            </div>
+                                                            </div>
 
-                                        {/* Cruise List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-10.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
+                                                        <div className="place-content">
+                                                            <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
+                                                                <div>
+                                                                    <h5 className="mb-1 text-truncate">
+                                                                        {circuit.Nom}
+                                                                    </h5>
+                                                                  
+                                                                    <p className="d-flex align-items-center fs-14">
+                                                                        <i className="isax isax-location5 me-2"></i>
+                                                                        {getVilleNom(circuit.villeId)}
+                                                                    </p>
+                                                                </div>
+                                                                {/*<div className="d-flex align-items-center">
+                                                                    <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium me-2">
+                                                                        4.5
+                                                                    </span>
+                                                                    <p className="fs-14 text-truncate">(25 reviews)</p>
+                                                                </div>*/}
+                                                            </div>
+                                                            
+                                                            <p className="fs-14 line-ellipsis mb-3">
+                                                                {circuit.Description || 'No description available'}
+                                                            </p>
+                                                            
+                                                            <div className="d-flex align-items-center justify-content-between cruise-list-item border-top flex-wrap row-gap-2 pt-3 mb-3">
+                                                                <p className="fs-14 mb-0">
+                                                                    <i className="isax isax-tag-user me-1"></i>
+                                                                    Availability: <span className="text-dark fw-medium">
+                                                                        {circuit.Disponibilite ? 'Yes' : 'No'}
+                                                                    </span>
+                                                                </p>
+                                                            </div>
+                                                            
+                                                            <div className="d-flex align-items-center justify-content-between border-top pt-3">
+                                                                <div className="d-flex align-items-center">
+                                                                    {/*<i className="isax isax-home-wifi ms-2 me-2"></i>
+                                                                    <i className="isax isax-scissor me-2"></i>
+                                                                    <i className="isax isax-profile-2user me-2"></i>
+                                                                    <span className="fs-14 fw-normal text-default d-inline-block">+2</span>*/}
+                                                                </div>
+                                                                <h5 className="text-primary text-nowrap me-2">
+                                                                    {circuit.Prix} DT <span className="fs-14 fw-normal text-default">/ Person</span>
+                                                                </h5>
+                                                            </div>
                                                         </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-05.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-04.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-06.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={4}  onClick={() => handleItemClick(4)}>
-                                                    <Link to="#" className={`fav-icon ${selectedItems[4] ?'selected':''}`}>
-                                                        <i className="isax isax-heart5"></i>
-                                                    </Link>
-                                                    <span className="badge bg-info d-inline-flex align-items-center"><i className="isax isax-ranking me-1"></i>Trending</span>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="col-md-12 text-center py-5">
+                                                <div className="alert alert-info">
+                                                    <h4>No Tours available</h4>
+                                                    <p className="mb-0">We couldn't find any Tours matching your search.</p>
                                                 </div>
                                             </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="mb-1 text-truncate"><Link to={routes.cruiseDetails}>Harbor Haven</Link></h5>
-                                                        <p className="d-flex align-items-center fs-14"><i className="isax isax-location5 me-2"></i>Princes Street, Edinburgh</p>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className="d-flex align-items-center overflow-hidden border-end pe-2  me-2">
-                                                            <span className="avatar avatar-sm flex-shrink-0 me-2">
-                                                                <ImageWithBasePath src="assets/img/users/user-11.jpg" className="rounded-circle" alt="img" />
-                                                            </span>
-                                                            <p className="fs-14 text-truncate">Kenneth Palmer</p>
-                                                        </Link>
-                                                        <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium me-2">4.3</span>
-                                                        <p className="fs-14 text-truncate">(380)</p>
-                                                    </div>
-                                                </div>
-                                                <p className="fs-14 line-ellipsis mb-3">Embark on a luxurious cruise where breathtaking destinations meet world-class comfort and entertainment.</p>
-                                                <div className="d-flex align-items-center justify-content-between cruise-list-item border-top flex-wrap row-gap-2 pt-3 mb-3">
-                                                    <p className="fs-14 mb-0"><i className="isax isax-calendar-2 text-gray-6 me-1"></i>Year : <span className="text-dark fw-medium">2016</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-user me-1"></i>Guests : <span className="text-dark fw-medium">6</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-fatrows text-gray-6 me-1"></i>Width : <span className="text-dark fw-medium">98.15 m</span></p>
-                                                    <p className="fs-14"><i className="isax isax-flash-1 me-1"></i>Speed : <span className="text-dark fw-medium">14 Knots</span></p>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                    <h6 className="d-flex align-items-center"><i className="isax isax-home-wifi ms-2 me-2"></i><i className="isax isax-scissor me-2"></i><i className="isax isax-profile-2user me-2"></i><i className="isax isax-wind-2 me-2"></i><Link to="#" className="fs-14 fw-normal text-default d-inline-block">+2</Link></h6>
-                                                    <h5 className="text-primary text-nowrap me-2">$450 <span className="fs-14 fw-normal text-default">/ day</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Cruise List */}
-
-                                        {/* Cruise List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider  owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-01.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-05.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-09.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-07.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={5}  onClick={() => handleItemClick(5)}>
-                                                    <Link to="#" className={`fav-icon ${selectedItems[5] ?'selected':''}`}>
-                                                        <i className="isax isax-heart5"></i>
-                                                    </Link>
-                                                    <span className="badge bg-info d-inline-flex align-items-center"><i className="isax isax-ranking me-1"></i>Trending</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="mb-1 text-truncate"><Link to={routes.cruiseDetails}>Albert Yacht</Link></h5>
-                                                        <p className="d-flex align-items-center fs-14"><i className="isax isax-location5 me-2"></i>King’s Road, Chelsea</p>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className="d-flex align-items-center overflow-hidden border-end pe-2  me-2">
-                                                            <span className="avatar avatar-sm flex-shrink-0 me-2">
-                                                                <ImageWithBasePath src="assets/img/users/user-12.jpg" className="rounded-circle" alt="img" />
-                                                            </span>
-                                                            <p className="fs-14 text-truncate">Timothy Brewer</p>
-                                                        </Link>
-                                                        <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium me-2">4.1</span>
-                                                        <p className="fs-14 text-truncate">(300)</p>
-                                                    </div>
-                                                </div>
-                                                <p className="fs-14 line-ellipsis mb-3">Embark on a luxurious cruise where breathtaking destinations meet world-class comfort and entertainment.</p>
-                                                <div className="d-flex align-items-center justify-content-between cruise-list-item border-top flex-wrap row-gap-2 pt-3 mb-3">
-                                                    <p className="fs-14 mb-0"><i className="isax isax-calendar-2 text-gray-6 me-1"></i>Year : <span className="text-dark fw-medium">2023</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-user me-1"></i>Guests : <span className="text-dark fw-medium">2</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-fatrows text-gray-6 me-1"></i>Width : <span className="text-dark fw-medium">72.83 m</span></p>
-                                                    <p className="fs-14"><i className="isax isax-flash-1 me-1"></i>Speed : <span className="text-dark fw-medium">23 Knots</span></p>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                    <h6 className="d-flex align-items-center"><i className="isax isax-home-wifi ms-2 me-2"></i><i className="isax isax-scissor me-2"></i><i className="isax isax-profile-2user me-2"></i><i className="isax isax-wind-2 me-2"></i><Link to="#" className="fs-14 fw-normal text-default d-inline-block">+2</Link></h6>
-                                                    <h5 className="text-primary text-nowrap me-2">$350 <span className="fs-14 fw-normal text-default">/ day</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Cruise List */}
-
-                                        {/* Cruise List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider  owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-11.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-03.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-08.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.cruiseDetails}>
-                                                                <ImageWithBasePath src="assets/img/cruise/cruise-04.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item"  key={6}  onClick={() => handleItemClick(6)}>
-                                                    <Link to="#" className={`fav-icon ${selectedItems[6] ?'selected':''}`}>
-                                                        <i className="isax isax-heart5"></i>
-                                                    </Link>
-                                                    <span className="badge bg-info d-inline-flex align-items-center"><i className="isax isax-ranking me-1"></i>Trending</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="mb-1 text-truncate"><Link to={routes.cruiseDetails}>Shelly Yacht</Link></h5>
-                                                        <p className="d-flex align-items-center fs-14"><i className="isax isax-location5 me-2"></i>Broad Street, Bristol</p>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className="d-flex align-items-center overflow-hidden border-end pe-2  me-2">
-                                                            <span className="avatar avatar-sm flex-shrink-0 me-2">
-                                                                <ImageWithBasePath src="assets/img/users/user-13.jpg" className="rounded-circle" alt="img" />
-                                                            </span>
-                                                            <p className="fs-14 text-truncate">Mark Arrington</p>
-                                                        </Link>
-                                                        <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium me-2">4.4</span>
-                                                        <p className="fs-14 text-truncate">(450)</p>
-                                                    </div>
-                                                </div>
-                                                <p className="fs-14 line-ellipsis mb-3">Embark on a luxurious cruise where breathtaking destinations meet world-class comfort and entertainment.</p>
-                                                <div className="d-flex align-items-center justify-content-between cruise-list-item border-top flex-wrap row-gap-2 pt-3 mb-3">
-                                                    <p className="fs-14 mb-0"><i className="isax isax-calendar-2 text-gray-6 me-1"></i>Year : <span className="text-dark fw-medium">2018</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-user me-1"></i>Guests : <span className="text-dark fw-medium">3</span></p>
-                                                    <p className="fs-14 mb-0"><i className="isax isax-fatrows text-gray-6 me-1"></i>Width : <span className="text-dark fw-medium">90.25 m</span></p>
-                                                    <p className="fs-14"><i className="isax isax-flash-1 me-1"></i>Speed : <span className="text-dark fw-medium">25 Knots</span></p>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top pt-3">
-                                                    <h6 className="d-flex align-items-center"><i className="isax isax-home-wifi ms-2 me-2"></i><i className="isax isax-scissor me-2"></i><i className="isax isax-profile-2user me-2"></i><i className="isax isax-wind-2 me-2"></i><Link to="#" className="fs-14 fw-normal text-default d-inline-block">+2</Link></h6>
-                                                    <h5 className="text-primary text-nowrap me-2">$300 <span className="fs-14 fw-normal text-default">/ day</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Cruise List */}
-
+                                        )}
                                     </div>
-
                                 </div>
                             </div>
-
+                            
                             {/* Pagination */}
-                            <nav className="pagination-nav">
-                                <ul className="pagination justify-content-center">
-                                    <li className="page-item disabled">
-                                        <Link className="page-link" to="#" aria-label="Previous">
-                                            <span aria-hidden="true"><i className="fa-solid fa-chevron-left"></i></span>
-                                        </Link>
-                                    </li>
-                                    <li className="page-item"><Link className="page-link" to="#">1</Link></li>
-                                    <li className="page-item"><Link className="page-link" to="#">2</Link></li>
-                                    <li className="page-item"><Link className="page-link" to="#">3</Link></li>
-                                    <li className="page-item active"><Link className="page-link" to="#">4</Link></li>
-                                    <li className="page-item"><Link className="page-link" to="#">5</Link></li>
-                                    <li className="page-item">
-                                        <Link className="page-link" to="#" aria-label="Next">
-                                            <span aria-hidden="true"><i className="fa-solid fa-chevron-right"></i></span>
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </nav>
-                            {/* /Pagination */}
-
+                            {circuits.length > 0 && (
+                                <nav className="pagination-nav mt-4">
+                                    <ul className="pagination justify-content-center">
+                                        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                            <button 
+                                                className="page-link" 
+                                                onClick={() => paginate(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                            >
+                                                <span aria-hidden="true"><i className="fa-solid fa-chevron-left"></i></span>
+                                            </button>
+                                        </li>
+                                        
+                                        {pageNumbers.map(number => (
+                                            <li 
+                                                key={number} 
+                                                className={`page-item ${currentPage === number ? 'active' : ''}`}
+                                            >
+                                                <button 
+                                                    className="page-link" 
+                                                    onClick={() => paginate(number)}
+                                                >
+                                                    {number}
+                                                </button>
+                                            </li>
+                                        ))}
+                                        
+                                        <li className={`page-item ${currentPage === pageNumbers.length ? 'disabled' : ''}`}>
+                                            <button 
+                                                className="page-link" 
+                                                onClick={() => paginate(currentPage + 1)}
+                                                disabled={currentPage === pageNumbers.length}
+                                            >
+                                                <span aria-hidden="true"><i className="fa-solid fa-chevron-right"></i></span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            )}
                         </div>
-
                     </div>
                 </div>
             </div>
         </>
-    )
-}
+    );
+};
 
-export default CruiseList
+export default CruiseList;

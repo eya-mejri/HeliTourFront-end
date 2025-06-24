@@ -1,10 +1,54 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { all_routes } from '../../router/all_routes';
 import Breadcrumb from '../../../core/common/Breadcrumb/breadcrumb';
+import axios from 'axios';
 
 const ContactUs = () => {
 
-    const routes = all_routes
+    
+
+    const routes = all_routes;
+    const [formData, setFormData] = useState({
+        email: '',
+        message: ''
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState<{success: boolean, message: string} | null>(null);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setSubmitStatus(null);
+
+        try {
+            const response = await axios.post('/http://127.0.0.1:3000/contact/api/contact', {
+                clientEmail: formData.email,  // Changed from 'email' to 'clientEmail'
+                clientMessage: formData.message  // Changed from 'message' to 'clientMessage'
+            });
+
+            setSubmitStatus({
+                success: true,
+                message: 'Your message has been sent successfully! We will contact you soon.'
+            });
+            setFormData({ email: '', message: '' });
+        } catch (error) {
+            setSubmitStatus({
+                success: false,
+                message: 'Failed to send message. Please try again later.'
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
 
     //Breadcrumb Data
     const breadcrumbs = [
@@ -25,7 +69,7 @@ const ContactUs = () => {
 
     return (
         <div>
-            <Breadcrumb title="Contact Us" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-02" />
+            <Breadcrumb title="Contact Us" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-02"  />
 
 
             {/* Page Wrapper */}
@@ -59,7 +103,7 @@ const ContactUs = () => {
                                         </span>
                                         <div>
                                             <p className="fs-14 mb-0">Email Address</p>
-                                            <h6 className="text-gray-6">dreamtourinfo@example.com</h6>
+                                            <h6 className="text-gray-6">helitour.tunisia@gmail.com</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -70,7 +114,7 @@ const ContactUs = () => {
                                         </span>
                                         <div>
                                             <p className="fs-14 mb-0">Phone Number</p>
-                                            <h6 className="text-gray-6">+1 81649 48103</h6>
+                                            <h6 className="text-gray-6">+216</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -82,7 +126,7 @@ const ContactUs = () => {
                                         <div>
                                             <p className="fs-14 mb-0">Our Location</p>
                                             <h6 className="text-gray-6">
-                                                2077 Chicago Avenue Orosi, CA 93647
+                                            49 Avenue Habib bourguiba Tozeur 2200
                                             </h6>
                                         </div>
                                     </div>
@@ -91,66 +135,61 @@ const ContactUs = () => {
                         </div>
                         <div className="col-xl-5 col-lg-5">
                             <div className="card bg-light-200 shadow-none mb-0">
-                                <div className="card-body">
-                                    <div className="mb-3">
-                                        <h2 className="mb-1">Get in Touch</h2>
-                                        <p className="text-gray-6 mb-1">
-                                            How we can help you? Please write down your query
-                                        </p>
-                                    </div>
-                                    <form action={routes.contactUs}>
-                                        <div className="row">
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        First Name <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Last Name <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input type="text" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-12">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Email <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input type="email" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-12">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Phone <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input type="email" className="form-control" />
-                                                </div>
-                                            </div>
-                                            <div className="col-md-12">
-                                                <div className="mb-3">
-                                                    <label className="form-label">
-                                                        Message <span className="text-danger">*</span>
-                                                    </label>
-                                                    <textarea
-                                                        className="form-control"
-                                                        rows={3}
-                                                        defaultValue={""}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button type="submit" className="btn btn-primary">
-                                            Send Message
-                                        </button>
-                                    </form>
-                                </div>
+            <div className="card-body">
+                <div className="mb-3">
+                    <h2 className="mb-1">Get in Touch</h2>
+                    <p className="text-gray-6 mb-1">
+                        How we can help you? Please write down your query
+                    </p>
+                </div>
+                {submitStatus && (
+                    <div className={`alert alert-${submitStatus.success ? 'success' : 'danger'}`}>
+                        {submitStatus.message}
+                    </div>
+                )}
+                <form onSubmit={handleSubmit}>
+                    <div className="row">
+                        <div className="col-md-12">
+                            <div className="mb-3">
+                                <label className="form-label">
+                                    Email <span className="text-danger">*</span>
+                                </label>
+                                <input 
+                                    type="email" 
+                                    className="form-control" 
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                />
                             </div>
+                        </div>
+                        <div className="col-md-12">
+                            <div className="mb-3">
+                                <label className="form-label">
+                                    Message <span className="text-danger">*</span>
+                                </label>
+                                <textarea
+                                    className="form-control"
+                                    rows={3}
+                                    name="message"
+                                    value={formData.message}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <button 
+                        type="submit" 
+                        className="btn btn-primary"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Sending...' : 'Send Message'}
+                    </button>
+                </form>
+            </div>
+        </div>
                         </div>
                     </div>
                     <div className="map-grid">

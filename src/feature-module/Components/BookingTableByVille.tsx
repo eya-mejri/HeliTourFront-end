@@ -9,6 +9,7 @@ import Breadcrumb from '../../core/common/Breadcrumb/breadcrumb';
 import axios from 'axios';
 import moment from 'moment';
 import PredefinedDateRangesBefore from "./PredefinedDateRangesBefore";
+import { Modal, Select } from "antd";
 
 interface AgentBookingPageProps {}
 
@@ -53,6 +54,9 @@ const BookingTableByVille: React.FC<AgentBookingPageProps> = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [searchEmail, setSearchEmail] = useState<string>("");
   const { cityName } = useParams();
+  const [selectedReservation, setSelectedReservation] = useState<TableData | null>(null);
+  const [newStatus, setNewStatus] = useState<string>("");
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const routes = all_routes;
   const breadcrumbs = [
@@ -135,22 +139,25 @@ const BookingTableByVille: React.FC<AgentBookingPageProps> = () => {
 
   const columns: ColumnsType<TableData> = [
     {
-      title: "ID",
+      title: "Reservation ID",
       dataIndex: "numReservation",
       key: "numReservation",
       render: (text: string, record: TableData) => (
         <Link
           to="#"
           className="link-primary fw-medium"
-          data-bs-toggle="modal"
-          data-bs-target={`#${text}`}
+          onClick={() => {
+            setSelectedReservation(record);
+            setNewStatus(record.status);
+            setModalVisible(true);
+          }}
         >
           {text}
         </Link>
       ),
     },
     {
-      title: "Circuit Name",
+      title: "Tour Name",
       dataIndex: "circuitName",
       key: "circuitName",
     },
@@ -184,18 +191,23 @@ const BookingTableByVille: React.FC<AgentBookingPageProps> = () => {
       dataIndex: "status",
       key: "status",
       render: (text: string) => (
-        <span
-          className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${
-            text === "confirmé"
-              ? "badge-success"
-              : text === "annulé"
-              ? "badge-danger"
-              : "badge-warning"
-          }`}
-        >
-          <i className="fa-solid fa-circle fs-5 me-1" />
-          {text}
-        </span>
+       <span
+  className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${
+    text === "confirmé"
+      ? "badge-success"
+      : text === "annulé"
+      ? "badge-danger"
+      : "badge-warning"
+  }`}
+>
+  <i className="fa-solid fa-circle fs-5 me-1" />
+  {text === "confirmé"
+    ? "Confirmed"
+    : text === "annulé"
+    ? "Cancelled"
+    : "Pending"}
+</span>
+
       ),
     },
     {
@@ -208,7 +220,7 @@ const BookingTableByVille: React.FC<AgentBookingPageProps> = () => {
   return (
     <>
       <div>
-        <Breadcrumb title="Hotel Bookings" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-04" />
+        <Breadcrumb title="Bookings" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-04" />
 
         <div className="content">
           <div className="container">
@@ -331,7 +343,7 @@ const BookingTableByVille: React.FC<AgentBookingPageProps> = () => {
                       loading={loading}
                       pagination={{
                         pageSize: 10,
-                        showSizeChanger: true,
+                        showSizeChanger: false,
                         pageSizeOptions: ["5", "10", "20", "30"],
                       }}
                       scroll={{ x: true }}
@@ -344,6 +356,39 @@ const BookingTableByVille: React.FC<AgentBookingPageProps> = () => {
         </div>
 
         <AgentHotelBookingModal />
+        <Modal
+  title={`Update Status - ${selectedReservation?.numReservation}`}
+  open={modalVisible}
+  onCancel={() => setModalVisible(false)}
+  onOk={async () => {
+    if (!newStatus || !selectedReservation?.numReservation) return;
+
+    try {
+      await axios.patch(
+        `http://127.0.0.1:3000/reservation/updateReservationStatus/${selectedReservation.numReservation}`,
+        { status: newStatus }
+      );
+      setModalVisible(false);
+      setSelectedReservation(null);
+    } catch (error) {
+      console.error("Failed to update reservation status:", error);
+    }
+  }}
+  okText="Update"
+  cancelText="Cancel"
+>
+  <p>Choisir un nouveau statut :</p>
+  <Select
+    style={{ width: '100%' }}
+    value={newStatus}
+    onChange={(value) => setNewStatus(value)}
+  >
+    <Select.Option value="confirmé">Confirmed</Select.Option>
+    <Select.Option value="annulé">Cancelled</Select.Option>
+    <Select.Option value="en attente">Pending</Select.Option>
+  </Select>
+</Modal>
+
       </div>
     </>
   );

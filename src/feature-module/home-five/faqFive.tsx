@@ -1,7 +1,6 @@
 import React from 'react'
 import ImageWithBasePath from '../../core/common/imageWithBasePath'
 import { Link } from 'react-router-dom'
-import Slider from 'react-slick';
 import { all_routes } from '../router/all_routes';
 
 const FaqFive = () => {
@@ -49,7 +48,7 @@ const FaqFive = () => {
             <div className="row align-items-center">
                 <div className="col-lg-6">
                     <div className="faq-five  aos" data-aos="fade-up">
-                        <ImageWithBasePath src="assets/img/faq/faq.png" alt="img" />
+                        <ImageWithBasePath src="http://127.0.0.1:3000/assets/img/images1-removebg-preview.png" alt="img" />
                     </div>
                 </div>
                 <div className="col-lg-6">
@@ -70,8 +69,7 @@ const FaqFive = () => {
 							</h2>
                             <div id="faq-collapseOne" className="accordion-collapse collapse show" data-bs-parent="#accordionFaq">
                                 <div className="accordion-body">
-                                    <p className="mb-0">We offer a wide range of tours, including cultural, adventure, luxury, and customized itineraries.</p>
-                                    <p>Popular destinations include Europe, Africa (e.g., Morocco), </p>
+                                    <p className="mb-0">We offer a wide range of helicopter tours, including scenic flights, adventure experiences, luxury escapes, and custom-designed aerial itineraries.</p>
                                 </div>
                             </div>
                         </div>
@@ -83,7 +81,7 @@ const FaqFive = () => {
 							</h2>
                             <div id="faq-collapsetwo" className="accordion-collapse collapse" data-bs-parent="#accordionFaq">
                                 <div className="accordion-body">
-                                    <p>We offer a wide range of tours, including cultural, adventure, luxury, and customized itineraries.</p>
+                                    <p>Yes, our tours are fully customizable! Clients can design their own unique helicopter experience by contacting us directly to discuss preferences, routes, and special requests.</p>
                                 </div>
                             </div>
                         </div>
@@ -95,7 +93,7 @@ const FaqFive = () => {
 							</h2>
                             <div id="faq-collapsthree" className="accordion-collapse collapse" data-bs-parent="#accordionFaq">
                                 <div className="accordion-body">
-                                    <p>We offer a wide range of tours, including cultural, adventure, luxury, and customized itineraries.</p>
+                                    <p>We adhere to strict aviation safety standards, with professionally trained pilots, regular helicopter maintenance, and comprehensive pre-flight checks to ensure a safe and comfortable experience for every passenger.</p>
                                 </div>
                             </div>
                         </div>
@@ -107,7 +105,7 @@ const FaqFive = () => {
 							</h2>
                             <div id="faq-collapsefour" className="accordion-collapse collapse" data-bs-parent="#accordionFaq">
                                 <div className="accordion-body">
-                                    <p>We offer a wide range of tours, including cultural, adventure, luxury, and customized itineraries.</p>
+                                    <p>We recommend booking your helicopter tour at least a few days in advance to ensure availability, especially during peak seasons or for customized itineraries.</p>
                                 </div>
                             </div>
                         </div>
@@ -119,7 +117,7 @@ const FaqFive = () => {
 							</h2>
                             <div id="faq-collapsefive" className="accordion-collapse collapse" data-bs-parent="#accordionFaq">
                                 <div className="accordion-body">
-                                    <p>We offer a wide range of tours, including cultural, adventure, luxury, and customized itineraries.</p>
+                                    <p>Cancellations made at least 48 hours in advance are eligible for a full refund. For last-minute changes or weather-related issues, we offer flexible rescheduling options to accommodate our clients.</p>
                                 </div>
                             </div>
                         </div>
@@ -130,7 +128,7 @@ const FaqFive = () => {
     </section>
     {/* /FAQ */}
 
-    {/* Testimonial Section */}
+    {/* Testimonial Section
     <section className="section testimonial-section bgwhite ">
         <div className="container">
             <div className="row justify-content-center">
@@ -143,7 +141,7 @@ const FaqFive = () => {
             </div>
             <div className="owl-carousel testimonial-slider">
             <Slider  {...TestimonialSider}>
-                {/* Testimonial Item*/}
+                {/* Testimonial Item*
                 <div className="card border-white aos" >
                     <div className="card-body">
                         <div className="d-flex align-items-center justify-content-between text-center flex-column">
@@ -171,7 +169,7 @@ const FaqFive = () => {
                 </div>
                 {/* /Testimonial Item*/}
 
-                {/* Testimonial Item*/}
+                {/* Testimonial Item*
                 <div className="card border-white aos " >
                     <div className="card-body">
                         <div className="d-flex align-items-center justify-content-between text-center flex-column">
@@ -199,7 +197,7 @@ const FaqFive = () => {
                 </div>
                 {/* /Testimonial Item*/}
 
-                {/* Testimonial Item*/}
+                {/* Testimonial Item*
                 <div className="card border-white aos "data-aos="fade-up">
                     <div className="card-body">
                         <div className="d-flex align-items-center justify-content-between flex-column">
@@ -228,7 +226,7 @@ const FaqFive = () => {
                 </div>
                 {/* /Testimonial Item*/}
 
-                {/* Testimonial Item*/}
+                {/* Testimonial Item*
                 <div className="card border-white aos " data-aos="fade-up">
                     <div className="card-body">
                         <div className="d-flex align-items-center justify-content-between text-center flex-column">
@@ -254,17 +252,17 @@ const FaqFive = () => {
                         </div>
                     </div>
                 </div>
-                {/* /Testimonial Item*/}
+                {/* /Testimonial Item*
             </Slider>
 
 
             </div>
         </div>
     </section>
-    {/* /Testimonial Section */}
+     /Testimonial Section */}
 
     {/* Get-in-touch */}
-    <section className="section getintouch pt-0">
+    <section className="section getintouch pt-0 mt-5">
         <div className="container">
             <div className="row">
                 <div className="col-12">
@@ -272,14 +270,14 @@ const FaqFive = () => {
                         <div className="row">
                             <div className="col-lg-8">
                                 <div className="getintouch-content pe-0">
-                                    <h2 className="text-white mb-2">Ready to Sail? Get in Touch!</h2>
-                                    <p className="text-light mb-4">Have questions about destinations, onboard experiences, or special offers? Our team is here to guide you. Reach out and let's make your next adventure unforgettable!</p>
-                                    <Link to={routes.contactUs} className="btn btn-white">Contact Us<i className="isax isax-arrow-right-3 ms-2"></i></Link>
+                                    <h2 className="text-white mb-2">Ready to Fly? Get in Touch!</h2>
+                                    <p className="text-light mb-4">Have questions about routes, flight experiences, or custom tour options? Our team is here to help you plan the perfect aerial adventure. Reach out and let’s make your helicopter tour unforgettable!</p>
+                                    <Link to="/pages/contact-us" className="btn btn-white">Contact Us<i className="isax isax-arrow-right-3 ms-2"></i></Link>
                                 </div>
                             </div>
                             <div className="col-lg-4">
                                 <div className="getintouch-img">
-                                    <ImageWithBasePath src="assets/img/cruise/cruise-23.jpg" alt="img" />
+                                    <ImageWithBasePath src="http://127.0.0.1:3000/assets/img/imagegetintouch.avif" alt="img" />
                                 </div>
                             </div>
                         </div>

@@ -44,7 +44,7 @@ const BookingStat = () => {
   });
 
   const colorList = [
-    '#212E47', '#3538CD', '#0E9384', '#CF3425', '#98AA30', '#6C757D', '#FFC107', '#17A2B8', '#6610F2', '#E83E8C',
+    '#CF3425', '#3538CD', '#0E9384', '#212E47', '#98AA30', '#6C757D', '#FFC107', '#17A2B8', '#6610F2', '#E83E8C',
   ];
 
   // Fetch ville data and initialize donut chart
@@ -96,7 +96,9 @@ const BookingStat = () => {
   const handleVilleClick = async (villeName: string) => {
     console.log("clicked");
     try {
-      const response = await axios.get(`http://127.0.0.1:3000/reservation/getReservationsByVille/${villeName}`);
+      const response = await axios.get(`http://127.0.0.1:3000/reservation/getReservationsByVille/${villeName}`,{params: {
+        status: "confirmé"
+      }});
       const reservations = response.data;
 
       // Group reservations by circuit
@@ -221,7 +223,7 @@ const BookingStat = () => {
               className="btn rebook-btn btn-md mb-5"
               onClick={handleBackClick}
             >
-              Back to Villes
+              Back to destinations
             </button>
           )}
           {/* List of bookings (villes or circuits) */}

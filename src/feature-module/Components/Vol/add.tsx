@@ -17,12 +17,12 @@ const Addvol = () => {
         //Breadcrumb Data
         const breadcrumbs = [
             {
-                label: 'Vol Details',
+                label: 'Flight Details',
                 link: routes.home1,
                 active: false,
             },
             {
-                label: 'Add Vol',
+                label: 'Add Flight',
                 active: true,
             },
             
@@ -59,9 +59,10 @@ const Addvol = () => {
   return (
     <>
      <Breadcrumb
-                title="Add Vol"
+                title="Add Flight"
                 breadcrumbs={breadcrumbs}
                 backgroundClass="breadcrumb-bg-02"
+                backgroundImage="http://localhost:3000/assets/img/bgTourList.webp"
             />
 
 {/* Page Wrapper */}
@@ -74,13 +75,13 @@ const Addvol = () => {
                     <div className="card border-0 mb-4 mb-lg-0 theiaStickySidebar">
                         <div className="card-body">
                             <div>
-                                <h5 className="mb-3">Add Vol</h5>
+                                <h5 className="mb-3">Add Flight</h5>
                                 <ul id="list-example" className="add-tab-list">
-                                    <li><a href="#Circuit">Circuit</a></li>
-                                    <li><a href="#Duree" >Duree</a></li>
-                                    <li><a href="#date_depart">Date de départ</a></li>
-                                    <li><a href="#Places_disponibles">Places disponibles</a></li>
-                                    <li><a href="#Statut">Statut</a></li>
+                                    <li><a href="#Circuit">Tour</a></li>
+                                    <li><a href="#Duree" >Duration</a></li>
+                                    <li><a href="#date_depart">Date</a></li>
+                                    <li><a href="#Places_disponibles">Available seats</a></li>
+                                    <li><a href="#Statut">Status</a></li>
                                     
                                 </ul>
                             </div>

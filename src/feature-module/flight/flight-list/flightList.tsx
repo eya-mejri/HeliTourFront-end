@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import Breadcrumb from '../../../core/common/Breadcrumb/breadcrumb';
 import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
@@ -6,30 +6,36 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import { all_routes } from '../../router/all_routes';
-import FlightSearch from '../flightSearch';
-import FlightFilter from '../flightFilter';
+import FormSearch from '../../home-five/FormSearch';
 
+interface Ville {
+  _id: string;
+  Nom: string;
+  Description: string;
+  circuits?: string[];
+  photos?: string[]; // matches your backend
+}
+
+const ITEMS_PER_PAGE = 6; // Number of items per page
 
 const FlightList = () => {
-    const routes = all_routes
-    //Breadcrumb Data
-    const breadcrumbs = [
-        {
-            label: 'Flight',
-            link: routes.home1,
-            active: false,
-        },
-        {
-            label: 'Flight',
-            active: false,
-        },
-        {
-            label: 'Flight List',
-            active: true,
-        },
-    ];
+    const routes = all_routes;
+    
+    // State declarations
+    const [villes, setVilles] = useState<Ville[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
+    const [currentPage, setCurrentPage] = useState<number>(1);
 
-    //ImageSlider
+    // Pagination calculations
+    const totalItems = villes.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
+    const currentVilles = villes.slice(startIndex, endIndex);
+
+    // ImageSlider configuration
     const imgslideroption = {
         dots: true,
         arrows: true,
@@ -42,658 +48,264 @@ const FlightList = () => {
         responsive: [
             {
                 breakpoint: 1400,
-                settings: {
-                    slidesToShow: 1,
-                },
+                settings: { slidesToShow: 1 },
             },
             {
                 breakpoint: 1300,
-                settings: {
-                    slidesToShow: 1,
-                },
+                settings: { slidesToShow: 1 },
             },
             {
                 breakpoint: 992,
-                settings: {
-                    slidesToShow: 1,
-                },
+                settings: { slidesToShow: 1 },
             },
             {
                 breakpoint: 576,
-                settings: {
-                    slidesToShow: 1,
-                },
+                settings: { slidesToShow: 1 },
             },
             {
                 breakpoint: 0,
-                settings: {
-                    slidesToShow: 1,
-                },
+                settings: { slidesToShow: 1 },
             },
         ],
     };
 
+    // Breadcrumb Data
+    const breadcrumbs = [
+        {
+            label: 'Ville',
+            link: routes.home1,
+            active: false,
+        },
+        {
+            label: 'Ville',
+            active: false,
+        },
+        {
+            label: 'Ville list',
+            active: true,
+        },
+    ];
 
-    const [selectedItems, setSelectedItems] = useState(Array(10).fill(false));
-    const handleItemClick = (index: number) => {
-        setSelectedItems((prevSelectedItems) => {
-            const updatedSelectedItems = [...prevSelectedItems];
-            updatedSelectedItems[index] = !updatedSelectedItems[index];
-            return updatedSelectedItems;
-        });
+    // Fetch villes from API
+    useEffect(() => {
+        const fetchVilles = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:3000/ville/getall');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data: Ville[] = await response.json();
+                setVilles(data);
+            } catch (err) {
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError('An unknown error occurred');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchVilles();
+    }, []);
+
+    // Handle favorite click
+    const handleItemClick = (villeId: string) => {
+        setSelectedItems(prev => ({
+            ...prev,
+            [villeId]: !prev[villeId]
+        }));
     };
+
+    // Handle page change
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Generate page numbers with ellipsis for large page counts
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisiblePages = 5;
+        
+        if (totalPages <= maxVisiblePages) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (currentPage <= 3) {
+                endPage = maxVisiblePages;
+            } else if (currentPage >= totalPages - 2) {
+                startPage = totalPages - maxVisiblePages + 1;
+            }
+            
+            if (startPage > 1) {
+                pages.push(1);
+                if (startPage > 2) {
+                    pages.push('...');
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                pages.push(i);
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pages.push('...');
+                }
+                pages.push(totalPages);
+            }
+        }
+        
+        return pages;
+    };
+
+    if (loading) {
+        return <div className="text-center py-5">Loading villes...</div>;
+    }
+
+    if (error) {
+        return <div className="alert alert-danger">Error: {error}</div>;
+    }
 
     return (
         <>
-            <Breadcrumb title="Flight" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-05" />
+            <Breadcrumb title="Ville" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-05"             
+            backgroundImage="http://localhost:3000/assets/img/bgTourList.webp"
+/>
             <div className="content">
                 <div className="container">
-                    <FlightSearch />
+                    <FormSearch />
 
-
-                    <div className="row">
-
-                        <FlightFilter />
-
-                        <div className="col-xl-9 col-lg-9">
-                            <div className="d-flex align-items-center justify-content-between flex-wrap">
-                                <h6 className="mb-3">1920 Flights Found on Your Search</h6>
-                                <div className="d-flex align-items-center flex-wrap">
-                                    <div className="list-item d-flex align-items-center mb-3">
-                                        <Link to={routes.flightGrid} className="list-icon me-2"><i className="isax isax-grid-1"></i></Link>
-                                        <Link to={routes.flightList} className="list-icon active me-2"><i className="isax isax-firstline"></i></Link>
-                                    </div>
-                                    <div className="dropdown mb-3">
-                                        <Link to="#" className="dropdown-toggle py-2" data-bs-toggle="dropdown" >
-                                            <span className="fw-medium text-gray-9">Sort By : </span>Recommended
-                                        </Link>
-                                        <div className="dropdown-menu dropdown-sm">
-                                            <form action={routes.flightGrid}>
-                                                <h6 className="fw-medium fs-16 mb-3">Sort By</h6>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend1" defaultChecked />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend1">Recommended</label>
-                                                </div>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend2" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend2">Price: low to high</label>
-                                                </div>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend3" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend3">Price: high to low</label>
-                                                </div>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend4" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend4">Newest</label>
-                                                </div>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-2">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend5" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend5">Ratings</label>
-                                                </div>
-                                                <div className="form-check d-flex align-items-center ps-0 mb-0">
-                                                    <input className="form-check-input ms-0 mt-0" name="recommend" type="checkbox" id="recommend6" />
-                                                    <label className="form-check-label ms-2" htmlFor="recommend6">Reviews</label>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-end border-top pt-3 mt-3">
-                                                    <Link to="#" className="btn btn-light btn-sm me-2">Reset</Link>
-                                                    <button type="button" className="btn btn-primary btn-sm">Apply</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-info br-10 p-3 pb-2 mb-4">
-                                <div className="d-flex align-items-center justify-content-between flex-wrap">
-                                    <p className="fs-14 fw-medium mb-2 d-inline-flex align-items-center"><i className="isax isax-info-circle me-2"></i>Save an average of 15% on thousands of flights when you're signed in</p>
-                                    <Link to={routes.login} className="btn btn-white btn-sm mb-2">Sign In</Link>
-                                </div>
-                            </div>
-                            <div className="hotel-list  list-full">
+                    <div className="row mt-5">
+                        <div className="col-xl-12 col-lg-12">
+                            
+                            
+                            <div className="hotel-list list-full">
                                 <div className="row justify-content-center">
-                                    <div className="col-md-12">
-                                        {/* Flight List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
+                                    {currentVilles.map((ville) => (
+                                        <div className="col-md-12 mt-3" key={ville._id}  style={{ height: '250px', width: '100%', objectFit: 'cover', borderRadius: '8px' }}>
+                                            <div className="place-item">
+                                                <div className="place-img">
+                                                    <div className="img-slider image-slide owl-carousel nav-center">
                                                     <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-09.jpg" className="img-fluid" alt="img" />
+                                                        {(ville.photos && ville.photos.length > 0 ? ville.photos : ['default.jpg']).map((photo, index) => (
+                                                            <div className="slide-images" key={index}>
+                                                            <Link to={`/ville/${ville._id}`}>
+                                                                <ImageWithBasePath 
+                                                                src={`http://localhost:3000/assets/img/villes/${photo}`} 
+                                                                className="img-fluid" 
+                                                                alt={`${ville.Nom} ${index + 1}`} 
+                                                                
+                                                                style={{ height: '250px', width: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                                                />
                                                             </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-05.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-07.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-02.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
+                                                            </div>
+                                                        ))}
                                                     </Slider>
-                                                </div>
-                                                <div className="fav-item"  key={1}  onClick={() => handleItemClick(1)}>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className={`fav-icon me-2${selectedItems[1] ?'selected':''}`}>
-                                                            <i className="isax isax-heart5"></i>
-                                                        </Link>
-                                                        <span className="badge bg-indigo">Cheapest</span>
+
                                                     </div>
-                                                    <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium rounded">5.0</span>
+                                                    <div className="fav-item" onClick={() => handleItemClick(ville._id)}>
+                                                        {/*<div className="d-flex align-items-center">
+                                                            <Link to="#" className={`fav-icon me-2${selectedItems[ville._id] ? ' selected' : ''}`}>
+                                                                <i className="isax isax-heart5"></i>
+                                                            </Link>
+                                                            <span className="badge bg-indigo">Popular</span>
+                                                        </div>
+                                                        <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium rounded">5.0</span>*/}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="text-truncate mb-1"><Link to={routes.flightDetails}>Antonov An-32</Link></h5>
-                                                        <div className="d-flex">
-                                                            <span className="avatar avatar-sm me-2">
-                                                                <ImageWithBasePath src="assets/img/icons/airindia.svg" className="rounded-circle" alt="icon" />
+                                                <div className="place-content">
+                                                    <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
+                                                        <div>
+                                                            <h5 className="text-truncate mb-1">
+                                                                <Link to={`/ville/${ville._id}`}>{ville.Nom}</Link>
+                                                            </h5>
+                                                            <div className="d-flex">
+                                                                <p className="fs-14 mb-0">{ville.Description}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="d-flex align-items-center">
+                                                            <span className="badge bg-outline-success fs-10 fw-medium me-2">
+                                                                {ville.circuits?.length || 0} Tours
                                                             </span>
-                                                            <p className="fs-14 mb-0 me-2">Air India</p>
-                                                            <p className="fs-14 mb-0"><i className="ti ti-point-filled text-primary me-2"></i>1-stop at Texas</p>
                                                         </div>
                                                     </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="badge bg-outline-success fs-10 fw-medium  me-2">20 Seats Left</span>
-                                                        <Link to="#" className="avatar avatar-sm">
-                                                            <ImageWithBasePath src="assets/img/users/user-08.jpg" className="rounded-circle" alt="img" />
+                                                    <div className="d-flex align-items-center justify-content-between border-top flex-wrap gap-2 pt-3">
+                                                        <div className="date-info p-2">
+                                                            <p className="d-flex align-items-center">
+                                                                <i className="isax isax-location me-2"></i>
+                                                                Explore {ville.Nom}
+                                                            </p>
+                                                        </div>
+                                                        <Link to={`/ville/${ville._id}`} className="btn btn-primary btn-sm">
+                                                            View Details
                                                         </Link>
                                                     </div>
-                                                </div>
-                                                <p className=" fs-14 mb-3">Experience top-notch service, in-flight amenities, and smooth takeoffs for a stress-free journey.</p>
-                                                <div className="flight-loc d-flex align-items-center justify-content-between mb-3">
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-45 me-2"></i>Newyork</span>
-                                                    <Link to="#" className="arrow-icon flex-shrink-0 mx-2"><i className="isax isax-arrow-2"></i></Link>
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-135 me-2"></i>Sydney</span>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top flex-wrap gap-2 pt-3">
-                                                    <div className="date-info p-2">
-                                                        <p className="d-flex align-items-center"><i className="isax isax-calendar-2 me-2"></i>Aug 01, 2024 - Aug 03, 2024</p>
-                                                    </div>
-                                                    <h6 className="text-primary"><span className="fs-14 fw-normal text-default">From </span>$500</h6>
-
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* /Flight List */}
-
-                                        {/* Flight List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-08.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-06.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-03.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-01.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item"  key={2}  onClick={() => handleItemClick(2)}>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className={`fav-icon me-2${selectedItems[2] ?'selected':''}`}>
-                                                            <i className="isax isax-heart5"></i>
-                                                        </Link>
-                                                        <span className="badge bg-indigo">Cheapest</span>
-                                                    </div>
-                                                    <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium rounded">4.5</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="text-truncate mb-1"><Link to={routes.flightDetails}>SkyBound 102</Link></h5>
-                                                        <div className="d-flex">
-                                                            <span className="avatar avatar-sm me-2">
-                                                                <ImageWithBasePath src="assets/img/icons/airindia.svg" className="rounded-circle" alt="icon" />
-                                                            </span>
-                                                            <p className="fs-14 mb-0 me-2">Indigo</p>
-                                                            <p className="fs-14 mb-0"><i className="ti ti-point-filled text-primary me-2"></i>1-stop at Dubai</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="badge bg-outline-success fs-10 fw-medium  me-2">18 Seats Left</span>
-                                                        <Link to="#" className="avatar avatar-sm">
-                                                            <ImageWithBasePath src="assets/img/users/user-09.jpg" className="rounded-circle" alt="img" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <p className=" fs-14 mb-3">Enjoy a comfortable and seamless journey with top-notch service on every flight.</p>
-                                                <div className="flight-loc d-flex align-items-center justify-content-between mb-3">
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-45 me-2"></i>London</span>
-                                                    <Link to="#" className="arrow-icon flex-shrink-0 mx-2"><i className="isax isax-arrow-2"></i></Link>
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-135 me-2"></i>London</span>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top flex-wrap gap-2 pt-3">
-                                                    <div className="date-info p-2">
-                                                        <p className="d-flex align-items-center"><i className="isax isax-calendar-2 me-2"></i>Aug 13, 2024 - Aug 15, 2024</p>
-                                                    </div>
-                                                    <h6 className="text-primary"><span className="fs-14 fw-normal text-default">From </span>$600</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Flight List */}
-
-                                        {/* Flight List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-06.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-01.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-09.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-05.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={3}  onClick={() => handleItemClick(3)}>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className={`fav-icon me-2${selectedItems[3] ?'selected':''}`}>
-                                                            <i className="isax isax-heart5"></i>
-                                                        </Link>
-                                                        <span className="badge bg-indigo">Cheapest</span>
-                                                    </div>
-                                                    <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium rounded">4.9</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="text-truncate mb-1"><Link to={routes.flightDetails}>Nimbus 345</Link></h5>
-                                                        <div className="d-flex">
-                                                            <span className="avatar avatar-sm me-2">
-                                                                <ImageWithBasePath src="assets/img/icons/airindia.svg" className="rounded-circle" alt="icon" />
-                                                            </span>
-                                                            <p className="fs-14 mb-0 me-2">Indigo</p>
-                                                            <p className="fs-14 mb-0"><i className="ti ti-point-filled text-primary me-2"></i>1-stop at Dubai</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="badge bg-outline-success fs-10 fw-medium  me-2">27 Seats Left</span>
-                                                        <Link to="#" className="avatar avatar-sm">
-                                                            <ImageWithBasePath src="assets/img/users/user-10.jpg" className="rounded-circle" alt="img" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <p className=" fs-14 mb-3">Enjoy a hassle-free journey with reliable service, spacious seating, and friendly staff.</p>
-                                                <div className="flight-loc d-flex align-items-center justify-content-between mb-3">
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-45 me-2"></i>Paris</span>
-                                                    <Link to="#" className="arrow-icon flex-shrink-0 mx-2"><i className="isax isax-arrow-2"></i></Link>
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-135 me-2"></i>Cape Town</span>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top flex-wrap gap-2 pt-3">
-                                                    <div className="date-info p-2">
-                                                        <p className="d-flex align-items-center"><i className="isax isax-calendar-2 me-2"></i>Aug 26, 2024 - Aug 27, 2024</p>
-                                                    </div>
-                                                    <h6 className="text-primary"><span className="fs-14 fw-normal text-default">From </span>$300</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Flight List */}
-
-                                        {/* Flight List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-01.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-02.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-03.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-04.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item"  key={4}  onClick={() => handleItemClick(4)}>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className={`fav-icon me-2${selectedItems[4] ?'selected':''}`}>
-                                                            <i className="isax isax-heart5"></i>
-                                                        </Link>
-                                                        <span className="badge bg-indigo">Cheapest</span>
-                                                    </div>
-                                                    <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium rounded">4.3</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="text-truncate mb-1"><Link to={routes.flightDetails}>AstraFlight 215</Link></h5>
-                                                        <div className="d-flex">
-                                                            <span className="avatar avatar-sm me-2">
-                                                                <ImageWithBasePath src="assets/img/icons/airindia.svg" className="rounded-circle" alt="icon" />
-                                                            </span>
-                                                            <p className="fs-14 mb-0 me-2">Indigo</p>
-                                                            <p className="fs-14 mb-0"><i className="ti ti-point-filled text-primary me-2"></i>1-stop at Frankfurt</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="badge bg-outline-success fs-10 fw-medium  me-2">27 Seats Left</span>
-                                                        <Link to="#" className="avatar avatar-sm">
-                                                            <ImageWithBasePath src="assets/img/users/user-11.jpg" className="rounded-circle" alt="img" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <p className=" fs-14 mb-3">Travel smart with affordable fares, seamless connections, and exceptional in-flight comfort.</p>
-                                                <div className="flight-loc d-flex align-items-center justify-content-between mb-3">
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-45 me-2"></i>Toronto</span>
-                                                    <Link to="#" className="arrow-icon flex-shrink-0 mx-2"><i className="isax isax-arrow-2"></i></Link>
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-135 me-2"></i>Bangkok</span>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top flex-wrap gap-2 pt-3">
-                                                    <div className="date-info p-2">
-                                                        <p className="d-flex align-items-center"><i className="isax isax-calendar-2 me-2"></i>Sep 04, 2024 - Sep 07, 2024</p>
-                                                    </div>
-                                                    <h6 className="text-primary"><span className="fs-14 fw-normal text-default">From </span>$300</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Flight List */}
-
-                                        {/* Flight List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-02.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-05.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-07.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-08.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={5}  onClick={() => handleItemClick(5)}>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#"className={`fav-icon me-2${selectedItems[5] ?'selected':''}`}>
-                                                            <i className="isax isax-heart5"></i>
-                                                        </Link>
-                                                        <span className="badge bg-indigo">Cheapest</span>
-                                                    </div>
-                                                    <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium rounded">4.1</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="text-truncate mb-1"><Link to={routes.flightDetails}>Cloudrider 789</Link></h5>
-                                                        <div className="d-flex">
-                                                            <span className="avatar avatar-sm me-2">
-                                                                <ImageWithBasePath src="assets/img/icons/airindia.svg" className="rounded-circle" alt="icon" />
-                                                            </span>
-                                                            <p className="fs-14 mb-0 me-2">Air India</p>
-                                                            <p className="fs-14 mb-0"><i className="ti ti-point-filled text-primary me-2"></i>1-stop at Dallas</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="badge bg-outline-success fs-10 fw-medium  me-2">14 Seats Left</span>
-                                                        <Link to="#" className="avatar avatar-sm">
-                                                            <ImageWithBasePath src="assets/img/users/user-12.jpg" className="rounded-circle" alt="img" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <p className=" fs-14 mb-3">Experience top-notch service, in-flight amenities, and smooth takeoffs for a stress-free journey.</p>
-                                                <div className="flight-loc d-flex align-items-center justify-content-between mb-3">
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-45 me-2"></i>Chicago</span>
-                                                    <Link to="#" className="arrow-icon flex-shrink-0 mx-2"><i className="isax isax-arrow-2"></i></Link>
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-135 me-2"></i>Melbourne</span>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top flex-wrap gap-2 pt-3">
-                                                    <div className="date-info p-2">
-                                                        <p className="d-flex align-items-center"><i className="isax isax-calendar-2 me-2"></i>Sep 11, 2024 - Sep 13, 2024</p>
-                                                    </div>
-                                                    <h6 className="text-primary"><span className="fs-14 fw-normal text-default">From </span>$550</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Flight List */}
-
-                                        {/* Flight List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img ">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-03.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-06.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-08.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-01.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={6}  onClick={() => handleItemClick(6)}>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#" className={`fav-icon me-2${selectedItems[6] ?'selected':''}`}>
-                                                            <i className="isax isax-heart5"></i>
-                                                        </Link>
-                                                        <span className="badge bg-indigo">Cheapest</span>
-                                                    </div>
-                                                    <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium rounded">4.6</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="text-truncate mb-1"><Link to={routes.flightDetails}>Aether Express 901</Link></h5>
-                                                        <div className="d-flex">
-                                                            <span className="avatar avatar-sm me-2">
-                                                                <ImageWithBasePath src="assets/img/icons/airindia.svg" className="rounded-circle" alt="icon" />
-                                                            </span>
-                                                            <p className="fs-14 mb-0 me-2">Indigo</p>
-                                                            <p className="fs-14 mb-0"><i className="ti ti-point-filled text-primary me-2"></i>1-stop at Seoul</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="badge bg-outline-success fs-10 fw-medium  me-2">12 Seats Left</span>
-                                                        <Link to="#" className="avatar avatar-sm">
-                                                            <ImageWithBasePath src="assets/img/users/user-13.jpg" className="rounded-circle" alt="img" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <p className=" fs-14 mb-3">Fly with confidence, knowing our comfortable cabins and efficient service make every trip a breeze.</p>
-                                                <div className="flight-loc d-flex align-items-center justify-content-between mb-3">
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-45 me-2"></i>Miami</span>
-                                                    <Link to="#" className="arrow-icon flex-shrink-0 mx-2"><i className="isax isax-arrow-2"></i></Link>
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-135 me-2"></i>Tokyo</span>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top flex-wrap gap-2 pt-3">
-                                                    <div className="date-info p-2">
-                                                        <p className="d-flex align-items-center"><i className="isax isax-calendar-2 me-2"></i>Sep 22, 2024 - Sep 24, 2024</p>
-                                                    </div>
-                                                    <h6 className="text-primary"><span className="fs-14 fw-normal text-default">From </span>$450</h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Flight List */}
-
-                                        {/* Flight List */}
-                                        <div className="place-item mb-4">
-                                            <div className="place-img">
-                                                <div className="img-slider image-slide owl-carousel nav-center">
-                                                    <Slider {...imgslideroption}>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-07.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-04.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-09.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                        <div className="slide-images">
-                                                            <Link to={routes.flightDetails}>
-                                                                <ImageWithBasePath src="assets/img/flight/flight-02.jpg" className="img-fluid" alt="img" />
-                                                            </Link>
-                                                        </div>
-                                                    </Slider>
-                                                </div>
-                                                <div className="fav-item" key={7}  onClick={() => handleItemClick(7)}>
-                                                    <div className="d-flex align-items-center">
-                                                        <Link to="#"className={`fav-icon me-2${selectedItems[7] ?'selected':''}`}>
-                                                            <i className="isax isax-heart5"></i>
-                                                        </Link>
-                                                        <span className="badge bg-indigo">Cheapest</span>
-                                                    </div>
-                                                    <span className="badge badge-warning badge-xs text-gray-9 fs-13 fw-medium rounded">4.8</span>
-                                                </div>
-                                            </div>
-                                            <div className="place-content">
-                                                <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 mb-3">
-                                                    <div>
-                                                        <h5 className="text-truncate mb-1"><Link to={routes.flightDetails}>Voyager 658</Link></h5>
-                                                        <div className="d-flex">
-                                                            <span className="avatar avatar-sm me-2">
-                                                                <ImageWithBasePath src="assets/img/icons/airindia.svg" className="rounded-circle" alt="icon" />
-                                                            </span>
-                                                            <p className="fs-14 mb-0 me-2">Air India</p>
-                                                            <p className="fs-14 mb-0"><i className="ti ti-point-filled text-primary me-2"></i>1-stop at Sydney</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex align-items-center">
-                                                        <span className="badge bg-outline-success fs-10 fw-medium  me-2">21 Seats Left</span>
-                                                        <Link to="#" className="avatar avatar-sm">
-                                                            <ImageWithBasePath src="assets/img/users/user-14.jpg" className="rounded-circle" alt="img" />
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                                <p className=" fs-14 mb-3">Relax and enjoy your flight with on-time schedules, comfortable seats, and world-class service.</p>
-                                                <div className="flight-loc d-flex align-items-center justify-content-between mb-3">
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-45 me-2"></i>Frankfurt</span>
-                                                    <Link to="#" className="arrow-icon flex-shrink-0 mx-2"><i className="isax isax-arrow-2"></i></Link>
-                                                    <span className="loc-name d-inline-flex justify-content-center align-items-center w-100"><i className="isax isax-airplane rotate-135 me-2"></i>Auckland</span>
-                                                </div>
-                                                <div className="d-flex align-items-center justify-content-between border-top flex-wrap gap-2 pt-3">
-                                                    <div className="date-info p-2">
-                                                        <p className="d-flex align-items-center"><i className="isax isax-calendar-2 me-2"></i>Oct 04, 2024 - Oct 07, 2024</p>
-                                                    </div>
-                                                    <h6 className="text-primary"><span className="fs-14 fw-normal text-default">From </span>$350</h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* /Flight List */}
-                                    </div>
+                                    ))}
                                 </div>
-
                             </div>
 
-                            {/* Pagination */}
-                            <nav className="pagination-nav">
-                                <ul className="pagination justify-content-center">
-                                    <li className="page-item disabled">
-                                        <Link className="page-link" to="#" aria-label="Previous">
-                                            <span aria-hidden="true"><i className="fa-solid fa-chevron-left"></i></span>
-                                        </Link>
-                                    </li>
-                                    <li className="page-item"><Link className="page-link" to="#">1</Link></li>
-                                    <li className="page-item"><Link className="page-link" to="#">2</Link></li>
-                                    <li className="page-item"><Link className="page-link" to="#">3</Link></li>
-                                    <li className="page-item active"><Link className="page-link" to="#">4</Link></li>
-                                    <li className="page-item"><Link className="page-link" to="#">5</Link></li>
-                                    <li className="page-item">
-                                        <Link className="page-link" to="#" aria-label="Next">
-                                            <span aria-hidden="true"><i className="fa-solid fa-chevron-right"></i></span>
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </nav>
-                            {/* /Pagination */}
-
+                            {/* Enhanced Pagination */}
+                            {totalPages > 1 && (
+                                <nav className="pagination-nav mt-3">
+                                    <ul className="pagination justify-content-center">
+                                        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                            <button 
+                                                className="page-link" 
+                                                onClick={() => handlePageChange(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                                aria-label="Previous"
+                                            >
+                                                <span aria-hidden="true"><i className="fa-solid fa-chevron-left"></i></span>
+                                            </button>
+                                        </li>
+                                        
+                                        {getPageNumbers().map((page, index) => (
+                                            <li 
+                                                key={index} 
+                                                className={`page-item ${page === '...' ? 'disabled' : ''} ${currentPage === page ? 'active' : ''}`}
+                                            >
+                                                {page === '...' ? (
+                                                    <span className="page-link">...</span>
+                                                ) : (
+                                                    <button 
+                                                        className="page-link" 
+                                                        onClick={() => handlePageChange(page as number)}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                )}
+                                            </li>
+                                        ))}
+                                        
+                                        <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                            <button 
+                                                className="page-link" 
+                                                onClick={() => handlePageChange(currentPage + 1)}
+                                                disabled={currentPage === totalPages}
+                                                aria-label="Next"
+                                            >
+                                                <span aria-hidden="true"><i className="fa-solid fa-chevron-right"></i></span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            )}
                         </div>
-
                     </div>
                 </div>
             </div>
         </>
-    )
-}
+    );
+};
 
-export default FlightList
+export default FlightList;

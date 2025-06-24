@@ -169,5 +169,13 @@ export const all_routes = {
     /*ListAppareil:"/appareil/ListAppareil",*/
     //noti
     agentNotification:"/agent/agent-notifications",
+
+    VilletDetails: "/ville/:id",
+    CircuitEdit:"/editcircuit/:id",
+    VilleEdit:"/edit-city/:id",
+    //user
+    circuitDetails:"/circuit/:id",
+    listedispo:"/liste",
+    confirmation:"/cruise/cruise-booking-confirmation/:id",
    
 };

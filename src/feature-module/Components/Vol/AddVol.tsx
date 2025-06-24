@@ -158,21 +158,21 @@ useEffect(() => {
       <div className="card shadow-none" id="Circuit">
                         <div className="card-header">
                             <div className="d-flex align-items-center justify-content-between">
-                                <h6 className="fs-18">Circuit</h6>
+                                <h6 className="fs-18">Tour</h6>
                             </div>
                         </div>
                         <div className="card-body pb-1">
                             <div className="row">
                             <div className="col-md-12">
                             <div className="mb-3">
-                                <label className="form-label">Circuit</label>
+                                <label className="form-label">Tour</label>
                                 <select
                                     className="form-control"
                                     value={selectedCircuitId}
                                     onChange={handleCircuitChange}
                                     required
                                 >
-                                    <option value="">Select a circuit</option>
+                                    <option value="">Select a tour</option>
                                     {circuits.map((circuit) => (
                                         <option key={circuit._id} value={circuit._id}>
                                             {circuit.Nom} {/* Replace `Nom` with the actual field for the circuit name */}
@@ -191,7 +191,7 @@ useEffect(() => {
         <div className="card shadow-none" id="date_depart">
                 <div className="card-header">
                     <div className="d-flex align-items-center justify-content-between">
-                        <h6 className="fs-18">Date de départ</h6>
+                        <h6 className="fs-18">Date</h6>
                     </div>
                 </div>
                 <div className="card-body pb-1">
@@ -214,17 +214,17 @@ useEffect(() => {
                         </div>
                         {selectedDate && (<div className="col-md-6">
                             <div className="mb-3">
-                                <label className="form-label">Heure</label>
+                                <label className="form-label">Hour</label>
                                 <select
                                     className="form-control"
                                     value={selectedTime}
                                     onChange={(e) => setSelectedTime(e.target.value)}
                                     disabled={!selectedDate || loadingTimes}
                                 >
-                                    <option value="">Sélectionnez une heure</option>
+                                    <option value="">Select an hour</option>
                                     {selectedDate && generateTimeSlots()}
                                 </select>
-                                {loadingTimes && <small>Chargement des horaires...</small>}
+                                {loadingTimes && <small>loading...</small>}
                             </div>
                         </div>)}
 
@@ -236,7 +236,7 @@ useEffect(() => {
             <div className="card shadow-none" id="Duree">
                 <div className="card-header">
                     <div className="d-flex align-items-center justify-content-between">
-                        <h6 className="fs-18">Duree</h6>
+                        <h6 className="fs-18">duration</h6>
                     </div>
                 </div>
                 <div className="card-body pb-1">
@@ -244,7 +244,7 @@ useEffect(() => {
                         {/* Duree */}
                         <div className="col-md-12">
                             <div className="mb-3">
-                                <label className="form-label">Durée (en minutes)</label>
+                                <label className="form-label">duration (in minutes)</label>
                                 <input
                                     type="number"
                                     className="form-control"
@@ -264,7 +264,7 @@ useEffect(() => {
         <div className="card shadow-none" id="Places_disponibles">
                 <div className="card-header">
                     <div className="d-flex align-items-center justify-content-between">
-                        <h6 className="fs-18">Places disponibles</h6>
+                        <h6 className="fs-18">Available Seats</h6>
                     </div>
                 </div>
                 <div className="card-body pb-1">
@@ -272,7 +272,7 @@ useEffect(() => {
                         {/* Duree */}
                         <div className="col-md-6">
                             <div className="mb-3">
-                                <label className="form-label">Places disponibles</label>
+                                <label className="form-label">Available Seats</label>
                                 <select
                                     className="form-control"
                                     value={placeDisponible}
@@ -297,7 +297,7 @@ useEffect(() => {
         <div className="card shadow-none" id="Statut">
                         <div className="card-header">
                             <div className="d-flex align-items-center justify-content-between">
-                                <h6 className="fs-18">Statut</h6>
+                                <h6 className="fs-18">Status</h6>
                             </div>
                         </div>
                         <div className="card-body pb-1">
@@ -305,15 +305,15 @@ useEffect(() => {
                                 {/* Duree */}
                                 <div className="col-md-6">
                                     <div className="mb-3">
-                                        <label className="form-label">Statut</label>
+                                        <label className="form-label">Status</label>
                                         <select
                                             className="form-control"
                                             value={status}
                                             onChange={handleStatusChange}
                                             required
                                         >
-                                            <option value="confirmé">Confirmé</option>
-                                            <option value="annulé">Annulé</option>
+                                            <option value="confirmé">Confirmed</option>
+                                            <option value="annulé">Cancelled</option>
                                         </select>
                                     </div>
                                 </div>
@@ -340,7 +340,7 @@ useEffect(() => {
                     Reset
                 </button>
                 <button type="submit" className="btn btn-primary">
-                    Add Vol
+                    Add flight
                 </button>
             </div>
         </form>

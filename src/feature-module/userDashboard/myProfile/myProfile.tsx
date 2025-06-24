@@ -1,13 +1,33 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { all_routes } from '../../router/all_routes';
 import Breadcrumb from '../../../core/common/Breadcrumb/breadcrumb';
 import Sidebar from '../../../core/common/sidebar/sidebar';
 import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+
+interface User {
+  Nom: string;
+  Prenom: string;
+  Email: string;
+  Num_Telephone: number;
+  Adresse: {
+    Pays: string;
+    Ville: string;
+    Code_Postal: string;
+    Adresse_Locale: string;
+  };
+  Role: {
+    Nom: string;
+  };
+}
 
 const MyProfile = () => {
-
   const routes = all_routes;
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   //Breadcrumb Data
   const breadcrumbs = [
     {
@@ -21,12 +41,42 @@ const MyProfile = () => {
     },
   ];
 
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Assuming you store token in localStorage
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await axios.get('http://127.0.0.1:3000/utilisateur/userInfo', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        setUser(response.data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  if (loading) return <div className="text-center py-5">Loading...</div>;
+  if (error) return <div className="alert alert-danger">Error: {error}</div>;
+  if (!user) return <div className="alert alert-warning">User not found</div>;
+
   return (
     <div>
       <Breadcrumb
         title="My Profile"
         breadcrumbs={breadcrumbs}
         backgroundClass="breadcrumb-bg-01"
+        backgroundImage="http://localhost:3000/assets/img/bgTourList.webp"
       />
 
       {/* Page Wrapper */}
@@ -54,7 +104,7 @@ const MyProfile = () => {
                 </div>
                 <div className="card-body">
                   <h6 className="fs-16 mb-3">Basic Information</h6>
-                  <div className="d-flex align-items-center mb-3">
+                  {/*<div className="d-flex align-items-center mb-3">
                     <span className="avatar avatar-xl flex-shrink-0 me-3 ">
                       <ImageWithBasePath
                         src="assets/img/users/user-01.jpg"
@@ -85,66 +135,63 @@ const MyProfile = () => {
                         </Link>
                       </div>
                     </div>
-                  </div>
+                  </div>*/}
                   <div className="row border-bottom pb-2 mb-3">
                     <div className="col-md-6">
                       <div className="mb-2">
                         <h6 className="fs-14">First Name</h6>
-                        <p>Jeffrey </p>
+                        <p>{user.Prenom}</p>
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="mb-2">
                         <h6 className="fs-14">Last Name</h6>
-                        <p>Wilson</p>
+                        <p>{user.Nom}</p>
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="mb-2">
                         <h6 className="fs-14">Email</h6>
-                        <p>chrfo2356@example.com</p>
+                        <p>{user.Email}</p>
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="mb-2">
                         <h6 className="fs-14">Phone</h6>
-                        <p>+1 12656 26654</p>
+                        <p>{user.Num_Telephone}</p>
                       </div>
                     </div>
                   </div>
                   <h6 className="fs-16 mb-3">Address Information</h6>
-                  <div className="row g-2">
-                    <div className="col-md-12">
-                      <div>
-                        <h6 className="fs-14">Address</h6>
-                        <p>4530 Clousson Road, Houston </p>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div>
-                        <h6 className="fs-14">Country</h6>
-                        <p>United States Of America</p>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div>
-                        <h6 className="fs-14">State</h6>
-                        <p>California</p>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div>
-                        <h6 className="fs-14">City</h6>
-                        <p>San Francisco</p>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div>
-                        <h6 className="fs-14">Postal Code</h6>
-                        <p>94105</p>
-                      </div>
-                    </div>
-                  </div>
+                  {user.Adresse && (
+  <div className="row g-2">
+    <div className="col-md-12">
+      <div>
+        <h6 className="fs-14">Address</h6>
+        <p>{user.Adresse.Adresse_Locale}</p>
+      </div>
+    </div>
+    <div className="col-md-12">
+      <div>
+        <h6 className="fs-14">Country</h6>
+        <p>{user.Adresse.Pays}</p>
+      </div>
+    </div>
+    <div className="col-md-12">
+      <div>
+        <h6 className="fs-14">City</h6>
+        <p>{user.Adresse.Ville}</p>
+      </div>
+    </div>
+    <div className="col-md-12">
+      <div>
+        <h6 className="fs-14">Postal Code</h6>
+        <p>{user.Adresse.Code_Postal}</p>
+      </div>
+    </div>
+  </div>
+)}
+
                 </div>
               </div>
             </div>
@@ -152,8 +199,6 @@ const MyProfile = () => {
           </div>
         </div>
       </div>
-      {/* /Page Wrapper */}
-
     </div>
   )
 }

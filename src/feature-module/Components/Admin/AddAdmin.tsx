@@ -141,7 +141,7 @@ const AddAdmin = () => {
                                     </Link>
                                     <Link to={routes.agentAccountSettings} className="ps-3">
                                         <i className="isax isax-wallet-money me-2" />
-                                        Admins listing
+                                        Admin listing
                                     </Link>
                                     {/*<Link to={routes.agentSecuritySettings}>
                                         <i className="isax isax-shield-tick me-2" />
@@ -159,7 +159,7 @@ const AddAdmin = () => {
                                             <div className="row gy-2">
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Nom</label>
+                                                        <label className="form-label">Last name</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -172,7 +172,7 @@ const AddAdmin = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Prenom</label>
+                                                        <label className="form-label">First Name</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -211,7 +211,7 @@ const AddAdmin = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Numéro de Téléphone</label>
+                                                        <label className="form-label">phone number</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -230,7 +230,7 @@ const AddAdmin = () => {
                                             <div className="row gy-2">
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Pays</label>
+                                                        <label className="form-label">Country</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -243,7 +243,7 @@ const AddAdmin = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Ville</label>
+                                                        <label className="form-label">City</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -256,7 +256,7 @@ const AddAdmin = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Code Postal</label>
+                                                        <label className="form-label">Postal code</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"
@@ -269,7 +269,7 @@ const AddAdmin = () => {
                                                 </div>
                                                 <div className="col-lg-6">
                                                     <div>
-                                                        <label className="form-label">Adresse Locale</label>
+                                                        <label className="form-label">Local Address</label>
                                                         <input
                                                             type="text"
                                                             className="form-control"

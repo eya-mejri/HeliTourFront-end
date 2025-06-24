@@ -16,19 +16,13 @@ const FooterFive = () => {
                         <div className="footer-about">
                             <span className="d-block mb-2 footer-logo-light"><ImageWithBasePath src="assets/img/logo-dark.svg" alt="Img" /></span>
                             <span className="mb-2 footer-logo-dark"><ImageWithBasePath src="assets/img/logo.svg" alt="Img" /></span>
-                            <p>At Deams Tour, we are committed to delivering a seamless and unforgettable cruise experience. </p>
+                            <p>At Helitour Tunisie, we are committed to delivering a seamless and unforgettable helicopter tour experience.</p>
                             <h5>Subscribe to Our Newsletter</h5>
                             <p>Just sign up and we'll send you a notification by email.</p>
-                            <div className="footer-input">
-                                <div className="input-group align-items-center justify-content-center">
-                                    <span className="input-group-text px-1"><i className="isax isax-message-favorite5"></i></span>
-                                    <input type="email" className="form-control" placeholder="Enter Email Address" />
-                                    <button type="submit" className="btn btn-primary">Subscribe</button>
-                                </div>
-                            </div>
+                            <Link className='btn btn-primary' to={routes.register}>Subscribe</Link>
                         </div>
                     </div>
-                    <div className="col-lg-2">
+                    {/*<div className="col-lg-2">
                         <div className="footer-widget">
                             <h5>Pages</h5>
                             <ul className="footer-menu">
@@ -77,8 +71,8 @@ const FooterFive = () => {
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                    <div className="col-lg-3">
+                    </div>*/}
+                    <div className="col-lg-3 offset-lg-3">
                         <div className="footer-widget">
                             <h5>Contact Info</h5>
                             <div className="customer-info">
@@ -87,7 +81,7 @@ const FooterFive = () => {
                                 </div>
                                 <div className="customer-info-content">
                                     <span>Customer Support</span>
-                                    <h6>+1 56589 54598</h6>
+                                    <h6>+216 21 065 627</h6>
                                 </div>
                             </div>
                             <div className="customer-info">
@@ -96,7 +90,7 @@ const FooterFive = () => {
                                 </div>
                                 <div className="customer-info-content">
                                     <span>Drop Us an Email</span>
-                                    <h6>info@example.com</h6>
+                                    <h6>helitour.tunisie@gmail.com</h6>
                                 </div>
                             </div>
                             <div className="customer-info">
@@ -105,7 +99,7 @@ const FooterFive = () => {
                                 </div>
                                 <div className="customer-info-content">
                                     <span>Toll Free</span>
-                                    <h6>+1 56569 54698</h6>
+                                    <h6>+216 21 065 627</h6>
                                 </div>
                             </div>
                         </div>
@@ -119,7 +113,7 @@ const FooterFive = () => {
                 <div className="row">
                     <div className="col-md-12">
                         <div className="d-flex align-items-center justify-content-between flex-wrap">
-                            <p className="fs-14">Copyright &copy; 2025. All Rights Reserved, <Link to="#" className="text-primary fw-medium">DreamsTour</Link></p>
+                            <p className="fs-14">Copyright &copy; 2025. All Rights Reserved, <Link to="#" className="text-primary fw-medium">Helitour Tunisia</Link></p>
                             <div className="d-flex align-items-center">
                                 <ul className="social-icon">
                                     <li>

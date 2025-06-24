@@ -110,6 +110,7 @@ import AdminRoute from "./AdminRoute";
 import Addappareil from "../Components/Appareil/add";
 import ListAppareil from "../Components/Appareil/ListAppareil";
 import Addvol from "../Components/Vol/add";
+import ListeDispo from "../curise/cruise-list/ListeDispo";
 
 const routes = all_routes;
 
@@ -117,12 +118,17 @@ export const publicRoutes = [
   {
     path: "/",
     name: "Root",
-    element: <Navigate to="/index" />,
+    element: <Navigate to="/index-5" />,
     route: Route,
   },
   {
     path: routes.home1,
     element: <HomeOne />,
+    route: Route,
+  },
+  {
+    path: routes.VilletDetails,
+    element: <FlightDetails />,
     route: Route,
   },
   {
@@ -664,6 +670,31 @@ export const publicRoutes = [
   {
     path: routes.agentNotification,
     element: <AgentNotification />,
+    route: Route,
+  },
+  {
+    path: routes.CircuitEdit,
+    element: <EditHotel />,
+    route: Route,
+  },
+  {
+    path: routes.VilleEdit,
+    element: <EditCar />,
+    route: Route,
+  },
+  {
+    path: routes.circuitDetails,
+    element: <CruiseDetails />,
+    route: Route,
+  },
+  {
+    path: routes.listedispo,
+    element: <ListeDispo searchParams={undefined} availableTours={[]} circuits={[]} />,
+    route: Route,
+  },
+  {
+    path: routes.confirmation,
+    element: <CruiseBookingConfirmation/>,
     route: Route,
   },
   

@@ -117,7 +117,7 @@ const disabledDate = (current: Dayjs) => {
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
-                <label className="form-label">Appareil Name</label>
+                <label className="form-label">Device Name</label>
                 <input
                   type="text"
                   className="form-control"
@@ -151,14 +151,14 @@ const disabledDate = (current: Dayjs) => {
 
       <div className="card shadow-none" id="gallery">
         <div className="card-header">
-          <h5 className="fs-18">Appareil Image</h5>
+          <h5 className="fs-18">Device Image</h5>
         </div>
         <div className="card-body">
           <div className="file-upload drag-file w-100 d-flex align-items-center justify-content-center flex-column mb-2">
             <span className="upload-img d-block mb-2">
               <i className="isax isax-document-upload fs-24" />
             </span>
-            <h6 className="mb-1">Upload Appareil Image</h6>
+            <h6 className="mb-1">Upload Device Image</h6>
             <p className="mb-0">Image size should below 5MB</p>
             <input
               type="file"
@@ -205,7 +205,7 @@ const disabledDate = (current: Dayjs) => {
           Reset
         </button>
         <button type="submit" className="btn btn-primary">
-          Update Appareil
+          Update Device
         </button>
       </div>
     </form>

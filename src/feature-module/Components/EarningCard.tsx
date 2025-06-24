@@ -120,36 +120,7 @@ const EarningCard = () => {
         <div className="card-body pb-0">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h6>Earnings</h6>
-            <div className="dropdown">
-              <Link
-                to="#"
-                className="dropdown-toggle btn bg-light-200 btn-sm text-gray-6 rounded-pill fw-normal fs-14 d-inline-flex align-items-center"
-                data-bs-toggle="dropdown"
-              >
-                <i className="isax isax-calendar-2 me-2 fs-14 text-gray-6" />
-                2025
-              </Link>
-              <ul className="dropdown-menu dropdown-menu-end p-3">
-                <li>
-                  <Link to="#" className="dropdown-item rounded-1">
-                    <i className="ti ti-point-filled me-1" />
-                    2025
-                  </Link>
-                </li>
-                <li>
-                  <Link to="#" className="dropdown-item rounded-1">
-                    <i className="ti ti-point-filled me-1" />
-                    2024
-                  </Link>
-                </li>
-                <li>
-                  <Link to="#" className="dropdown-item rounded-1">
-                    <i className="ti ti-point-filled me-1" />
-                    2023
-                  </Link>
-                </li>
-              </ul>
-            </div>
+            <p>this year</p>
           </div>
           <div className="row">
             <div className="d-flex align-items-center justify-content-between flex-wrap">
@@ -159,15 +130,7 @@ const EarningCard = () => {
                   {earningChart.series[0].data.reduce((acc: number, curr: number) => acc + curr, 0).toLocaleString()} {/* Calculate total earnings */}
                 </h3>
               </div>
-              <div className="d-flex align-items-center mb-2">
-                <p className="fs-14">
-                  <span className="badge badge-soft-success badge-md border border-success rounded-pill me-2">
-                    <i className="isax isax-arrow-up-3" />
-                    12%
-                  </span>
-                  vs last years
-                </p>
-              </div>
+              
             </div>
             <div id="earning-chart">
               <ReactApexChart

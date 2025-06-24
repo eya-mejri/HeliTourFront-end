@@ -33,11 +33,12 @@ const AboutUs = () => {
                 title="About Us"
                 breadcrumbs={breadcrumbs}
                 backgroundClass="breadcrumb-bg-01"
+                backgroundImage="http://localhost:3000/assets/img/bgTourList.webp"
             />
             <AboutSection/>
-            <ChooseUsSection/>
+           {/*} <ChooseUsSection/>
             <TeamSection/>
-            <UserSection/>
+            <UserSection/>*/}
 
         </div>
     )

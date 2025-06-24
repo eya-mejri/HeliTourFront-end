@@ -61,7 +61,9 @@ const VolListing = () => {
                 setLoading(true);
     
                 const circuitsResponse = await axios.get<Circuit[]>('http://127.0.0.1:3000/circuit/getall');
+                
                 setCircuits(circuitsResponse.data);
+                
     
                 const villesResponse = await axios.get<Ville[]>('http://127.0.0.1:3000/ville/getall');
                 setVilles(villesResponse.data);
@@ -71,6 +73,7 @@ const VolListing = () => {
                 } else {
                     const volsResponse = await axios.get<Vol[]>('http://127.0.0.1:3000/vol/getall');
                     setVols(volsResponse.data);
+                    console.log(volsResponse.data)
                 }
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -105,16 +108,11 @@ const VolListing = () => {
 
     // Transform the fetched data to match the table's expected structure
     const transformedData: TableData[] = vols.map((vol) => {
-        const dateDepart = new Date(vol.Date_depart); // Convert the ISO string to a Date object
-        const formattedDate = dateDepart.toLocaleDateString('fr-FR', { // Format the date
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-        });
-        const formattedTime = dateDepart.toLocaleTimeString('fr-FR', { // Format the time
-            hour: '2-digit',
-            minute: '2-digit',
-        });
+        const dateDepart = moment.utc(vol.Date_depart);
+// Convert the ISO string to a Date object
+        const formattedDate = dateDepart.format('DD/MM/YYYY');
+        const formattedTime = dateDepart.format('HH:mm');
+
 
         // Find the circuit using the circuitId
         const circuit = circuits.find((c) => c._id === vol.circuitId);
@@ -139,7 +137,7 @@ const VolListing = () => {
     // Define the columns for the table
     const columns: ColumnsType<TableData> = [
         {
-            title: 'Vol ID',
+            title: 'flight ID',
             dataIndex: 'volId',
             key: 'volId',
             render: (text: string) => (
@@ -152,46 +150,46 @@ const VolListing = () => {
             ),
         },
         {
-            title: 'Durée',
+            title: 'Duration',
             dataIndex: 'duree',
             key: 'duree',
         },
         {
-            title: 'Date de départ',
+            title: 'Date',
             dataIndex: 'dateDepart',
             key: 'dateDepart',
         },
         {
-            title: 'Places disponibles',
+            title: 'Available Seats',
             dataIndex: 'placeDisponible',
             key: 'placeDisponible',
         },
         {
-            title: 'Statut',
+            title: 'Status',
             dataIndex: 'status',
             key: 'status',
             render: (text: string) => (
                 <span
-                    className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${
-                        text === 'confirmé'
-                            ? 'badge-success'
-                            : text === 'annulé'
-                            ? 'badge-danger'
-                            : ''
-                    }`}
-                >
-                    <i className="fa-solid fa-circle fs-5 me-1" />
-                    {text}
-                </span>
+    className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${
+        text === 'confirmé'
+            ? 'badge-success'
+            : text === 'annulé'
+            ? 'badge-danger'
+            : ''
+    }`}
+>
+    <i className="fa-solid fa-circle fs-5 me-1" />
+    {text === 'confirmé' ? 'Confirmed' : text === 'annulé' ? 'Cancelled' : text}
+</span>
             ),
         },
         {
-            title: 'Circuit', // Updated column title
+            title: 'Tour', // Updated column title
             dataIndex: 'circuitName', // Updated dataIndex
             key: 'circuitName',
         },
         {
-            title: 'Ville', // New column for ville name
+            title: 'Destination', // New column for ville name
             dataIndex: 'villeName', // New dataIndex
             key: 'villeName',
         },
@@ -202,7 +200,7 @@ const VolListing = () => {
             <div className="card border-0">
                 <div className="card-body d-flex align-items-center justify-content-between flex-wrap row-gap-2">
                     <div>
-                        <h5 className="mb-1">Vols</h5>
+                        <h5 className="mb-1">Flights</h5>
                         <p>No of Listings : {vols.length}</p>
                     </div>
                     <div>
@@ -211,7 +209,7 @@ const VolListing = () => {
                             className="btn btn-primary d-inline-flex align-items-center me-0"
                         >
                             <i className="isax isax-add me-1 fs-16" />
-                            Add Vol
+                            Add Flight
                         </Link>
                     </div>
                 </div>

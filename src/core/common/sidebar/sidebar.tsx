@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import ImageWithBasePath from '../imageWithBasePath'
 import { all_routes } from '../../../feature-module/router/all_routes'
 import { Link, useLocation } from 'react-router-dom'
+import LogoutModal from '../../../feature-module/Components/LogoutModal'
 
 const Sidebar = () => {
 
@@ -97,7 +98,7 @@ const Sidebar = () => {
                         <div className="d-flex align-items-center justify-content-between ">
                             <div className=" d-flex align-items-center justify-content-center ">
                                 <ImageWithBasePath
-                                    src="assets/img/users/user-01.jpg"
+                                    src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
                                     alt="image"
                                     className="img-fluid avatar avatar-lg rounded-circle flex-shrink-0 me-1"
                                 />
@@ -124,7 +125,7 @@ const Sidebar = () => {
                         <li>
                             <span className="fs-14 text-gray-3 fw-medium mb-2">Main</span>
                         </li>
-                        <li>
+                        {/*<li>
                             <Link
                                 to={routes.userDashboard}
                                 className={`d-flex align-items-center ${location.pathname === routes.userDashboard && 'active'}`}
@@ -132,8 +133,8 @@ const Sidebar = () => {
                                 <i className="isax isax-grid-55" />
                                 Dashboard
                             </Link>
-                        </li>
-                        <li className="submenu">
+                        </li>*/}
+                        {/*<li className="submenu">
                             <Link to="#" onClick={() => setsubdroptoggle(!subdroptoggle)}
                                 className={`d-block ${subdroptoggle ? 'subdrop' : ''} ${location.pathname.includes('customer') ? 'active' : ''}`}>
                                 <i className="isax isax-calendar-tick5" />
@@ -216,7 +217,7 @@ const Sidebar = () => {
                         </li>
                         <li>
                             <span className="fs-14 text-gray-3 fw-medium mb-2">Account</span>
-                        </li>
+                        </li>*/}
                         <li>
                             <Link to={routes.myProfile} className={`d-flex align-items-center ${location.pathname.includes('my-profile') ? 'active' : ''}`}>
                                 <i className="isax isax-profile-tick5" /> My Profile
@@ -234,23 +235,37 @@ const Sidebar = () => {
                             </div>
                         </li>
                         <li>
+                            <Link to={routes.customerHotelBooking} className={`d-flex align-items-center ${location.pathname.includes('customer') ? 'active' : ''}`}>
+                                <i className="isax isax-calendar me-2" /> My bookings
+                            </Link>  
+                        </li>
+                        <li>
+                            <Link to={routes.profileSettings} className={`d-flex align-items-center ${location.pathname.includes('Settings') ? 'active' : ''}`}>
+                                <i className="isax isax-setting-25" /> Settings
+                            </Link>
+                        </li>
+                        {/*<li>
                             <Link
                                 to={routes.profileSettings}
                                 className={`d-flex align-items-center ${location.pathname.includes('settings') ? 'active' : ''}`}
                             >
                                 <i className="isax isax-setting-25" /> Settings
                             </Link>
-                        </li>
+                        </li>*/}
                         <li>
-                            <Link to={routes.home1} className="d-flex align-items-center pb-0">
-                                <i className="isax isax-logout-15" /> Logout
-                            </Link>
+                            <a
+                          href="#"
+                          className="dropdown-item text-danger"
+                          data-bs-toggle="modal"
+                          data-bs-target="#logout_modal"
+                        ><i className="isax isax-logout-15" /> Logout
+                        </a>
                         </li>
                     </ul>
                 </div>
             </div>
             {/* /Sidebar */}
-
+ <LogoutModal/>
         </div>
     )
 }

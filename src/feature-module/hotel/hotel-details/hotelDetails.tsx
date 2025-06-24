@@ -192,7 +192,7 @@ const HotelDetails = () => {
                             <Link to="#" className="btn btn-outline-light btn-icon btn-sm d-flex align-items-center justify-content-center me-2"><i className="isax isax-share"></i></Link>
                             <Link to="#" className="btn btn-outline-light btn-sm d-inline-flex align-items-center"><i className="isax isax-heart5 text-danger me-1"></i>Save</Link>
                         </div>
-                    </div>
+                    </div>44
                     <div className="d-flex align-items-center justify-content-between flex-wrap mb-3">
                         <div className="d-flex align-items-center flex-wrap">
                             <p className="fs-14 me-2 mb-2"><i className="isax isax-tick-circle5 text-success me-2"></i>Fully refundable</p>

@@ -13,44 +13,15 @@ const AboutSection = () => {
                 <div className="container">
                     <div className="row align-items-center">
                         <div className="col-lg-6">
-                            <div className="about-image mb-4 mb-lg-0">
-                                <div className="about-listing">
-                                    <i className="isax isax-calendar-add text-white mb-2" />
-                                    <h6 className="fs-16 mb-3 text-white">All Listings</h6>
-                                    <div className="listing-img">
-                                        <div>
-                                            <ImageWithBasePath src="assets/img/icons/listing.svg" alt="icon" />
+                              <div>
+                                            <ImageWithBasePath src="http://localhost:3000/assets/img/about (2).png" alt="icon" />
                                         </div>
-                                        <Link
-                                            to={routes.addHotel}
-                                            className="btn btn-warning text-gray-9"
-                                        >
-                                            Add You Listings
-                                        </Link>
-                                    </div>
-                                </div>
-                                <div className="about-img">
-                                    <ImageWithBasePath src="assets/img/about.png" alt="about" />
-                                </div>
-                                <div className="about-progress d-inline-flex align-items-center">
-                                    <ImageWithBasePath src="assets/img/icons/progress-icon.svg" alt="icon" />
-                                    <div className="ms-2">
-                                        <p className="fs-10 mb-1">Today’s Earnings</p>
-                                        <h6 className="fs-13">$2500</h6>
-                                    </div>
-                                    <Link
-                                        to={routes.userWallet}
-                                        className="btn btn-teal btn-sm fw-normal ms-4"
-                                    >
-                                        Withdraw
-                                    </Link>
-                                </div>
-                            </div>
+                                        
                         </div>
                         <div className="col-lg-6">
                             <div className="about-content mb-4">
                                 <h6 className="text-primary fs-14 fw-medium mb-2">
-                                    About DreamsTour
+                                    About Helitour
                                 </h6>
                                 <h2 className="display-6 mb-2">
                                     All-in-one platform for unforgettable travel experiences!
@@ -89,20 +60,7 @@ const AboutSection = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="about-bg d-none d-md-block">
-                        <ImageWithBasePath
-                            src="assets/img/bg/about-bg.png"
-                            alt="img"
-                            className="about-bg-01"
-                        />
-                    </div>
-                    <div className="about-bg-1 d-none d-md-block">
-                        <ImageWithBasePath
-                            src="assets/img/bg/about-arrow.png"
-                            alt="img"
-                            className="about-bg-01"
-                        />
-                    </div>
+                    
                 </div>
             </section>
             {/* /About Section */}

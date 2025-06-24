@@ -90,7 +90,10 @@ const AgentNotification = () => {
     setUnreadIds([]);
     localStorage.setItem('unreadNotificationIds', JSON.stringify([]));
   };
-
+  useEffect(() => {
+    handleMarkAllAsRead(); // Automatically mark as read when visiting the page
+  }, []);
+  
   const breadcrumbs = [
     {
       label: 'Notifications',
@@ -109,6 +112,7 @@ const AgentNotification = () => {
         title="Notifications"
         breadcrumbs={breadcrumbs}
         backgroundClass="breadcrumb-bg-01"
+        backgroundImage="http://localhost:3000/assets/img/bgTourList.webp"
       />
 
       <div className="content">
@@ -133,15 +137,15 @@ const AgentNotification = () => {
                         Mark all as Read
                       </Link>
                       <Link
-  to="#"
-  className="btn btn-primary btn-sm d-flex align-items-center"
-  data-bs-toggle="modal"
-  data-bs-target="#delete_modal"
-  onClick={() => setSelectedId(null)} // 👈 THIS LINE is the fix
->
-  <i className="isax isax-trash me-2" />
-  Delete All
-</Link>
+                        to="#"
+                        className="btn btn-primary btn-sm d-flex align-items-center"
+                        data-bs-toggle="modal"
+                        data-bs-target="#delete_modal"
+                        onClick={() => setSelectedId(null)} // 👈 THIS LINE is the fix
+                      >
+                        <i className="isax isax-trash me-2" />
+                        Delete All
+                      </Link>
                     </div>
                   </div>
                 </div>

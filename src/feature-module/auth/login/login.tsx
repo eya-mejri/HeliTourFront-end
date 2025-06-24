@@ -33,7 +33,7 @@ const Login = () => {
       });
 
       if (result.success) {
-        navigate(routes.home1); // Redirect to home on successful login
+        navigate(routes.home5); // Redirect to home on successful login
       } else {
         setError(result.error || 'Login failed'); 
       }
@@ -55,7 +55,7 @@ const Login = () => {
             <div className="card-header">
               <div className="text-center">
                 <h5 className="mb-1">Sign In</h5>
-                <p>Sign in to Start Manage your DreamsTour Account</p>
+                <p>Sign in to Start Manage your HeliTour Account</p>
               </div>
             </div>
             <div className="card-body">
@@ -145,7 +145,7 @@ const Login = () => {
                     )}
                   </button>
                 </div>
-                <div className="login-or mb-3">
+                {/*<div className="login-or mb-3">
                   <span className="span-or">Or</span>
                 </div>
                 <div className="d-flex align-items-center mb-3">
@@ -171,7 +171,7 @@ const Login = () => {
                     />
                     Facebook
                   </Link>
-                </div>
+                </div>*/}
                 <div className="d-flex justify-content-center">
                   <p className="fs-14">
                     Don't you have an account?{" "}

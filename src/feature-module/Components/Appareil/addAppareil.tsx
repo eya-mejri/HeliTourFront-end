@@ -95,7 +95,7 @@ const AddAppareil = () => {
           <div className="row">
             <div className="col-md-12">
               <div className="mb-3">
-                <label className="form-label">Appareil Name</label>
+                <label className="form-label">Device Name</label>
                 <input
                   type="text"
                   className="form-control"
@@ -179,7 +179,7 @@ const AddAppareil = () => {
           Reset
         </button>
         <button type="submit" className="btn btn-primary">
-          Add New Appareil
+          Add New Device
         </button>
       </div>
     </form>

@@ -58,13 +58,13 @@ const EditFlight = () => {
   //Breadcrumb Data
   const breadcrumbs = [
     {
-      label: 'Edit Flight',
+      label: 'Edit device',
       active: false,
       link: routes.home1
     },
 
     {
-      label: 'Edit Flight',
+      label: 'Edit device',
       active: true,
     },
   ];
@@ -76,7 +76,7 @@ const EditFlight = () => {
 
   return (
     <>
-      <Breadcrumb title="Edit Appareil" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-05" />
+      <Breadcrumb title="Edit Device" breadcrumbs={breadcrumbs} backgroundClass="breadcrumb-bg-05" backgroundImage="http://localhost:3000/assets/img/bgTourList.webp" />
       <div className="content">
         <div className="container">
           <div className="place-nav">
@@ -90,7 +90,7 @@ const EditFlight = () => {
                   aria-selected="true"
                   role="tab"
                 >
-                  Edit Appareil
+                  Edit Devise
                 </Link>
               </li>
               {/*<li>
@@ -121,7 +121,7 @@ const EditFlight = () => {
                 <div className="card border-0 mb-4 mb-lg-0 theiaStickySidebar">
                     <div className="card-body">
                       <div>
-                        <h5 className="mb-3">Adit Appareil</h5>
+                        <h5 className="mb-3">Edit Device</h5>
                         <ul className="add-tab-list">
                           <li>
                             <a href="#basic_info" className="active" id='list-example'> Basic Info </a>

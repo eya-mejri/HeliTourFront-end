@@ -79,26 +79,37 @@ const PaiementTable = (props: { numPage: any }) => {
       render: (montant: number, record: TableData) => `${montant} ${record.devise}`,
     },
     {
-      title: "Status",
-      dataIndex: "statut",
-      key: "statut",
-      render: (text: string) => (
-        <span
-          className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${
-            text === "réussi"
-              ? "badge-success"
-              : text === "en_attente"
-              ? "badge-warning"
-              : text === "échoué"
-              ? "badge-danger"
-              : ""
-          }`}
-        >
-          <i className="fa-solid fa-circle fs-5 me-1" />
-          {text}
-        </span>
-      ),
-    },
+  title: "Status",
+  dataIndex: "statut",
+  key: "statut",
+  render: (text: string) => {
+    // Map French status to English display text
+    const statusMap: Record<string, string> = {
+      "réussi": "Succeeded",
+      "en_attente": "Pending",
+      "échoué": "Failed"
+    };
+    
+    const englishText = statusMap[text] || text;
+    
+    return (
+      <span
+        className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${
+          text === "réussi"
+            ? "badge-success"
+            : text === "en_attente"
+            ? "badge-warning"
+            : text === "échoué"
+            ? "badge-danger"
+            : ""
+        }`}
+      >
+        <i className="fa-solid fa-circle fs-5 me-1" />
+        {englishText}
+      </span>
+    );
+  },
+},
     {
       title: "Payment Date",
       dataIndex: "date_paiement",

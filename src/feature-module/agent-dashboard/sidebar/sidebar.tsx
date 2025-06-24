@@ -5,6 +5,7 @@ import ImageWithBasePath from '../../../core/common/imageWithBasePath';
 import NotiIcon from '../../Components/Admin/NotiIcon';
 import ProfileCard from '../../Components/Admin/ProfileCard';
 import { Logout } from './LogoutModel';
+import LogoutModal from '../../Components/LogoutModal';
 
 
 interface Ville {
@@ -102,7 +103,7 @@ const Sidebar = () => {
             </li>
             <li>
               <Link to={routes.agentEnquirers} className={`d-flex align-items-center ${location.pathname === routes.agentEnquirers && 'active'}`}>
-                <i className="isax isax-magic-star5 me-2" />
+               <i className="isax isax-people me-2" />
                 Users
               </Link>
             </li>
@@ -127,22 +128,20 @@ const Sidebar = () => {
               {/*<Link to={routes.home1} className="d-flex align-items-center pb-0">
                 <i className="isax isax-logout-15" /> Logout
               </Link>*/}
-              <Link
-                  to="#"
-                  className="d-flex align-items-center pb-0"
-                  data-bs-toggle="modal"
-                  data-bs-target="#logout_modal"
-              >
-                <i className="isax isax-logout-15" />
-                Logout
-              </Link>
-              
+              <a
+                          href="#"
+                          className="dropdown-item text-danger"
+                          data-bs-toggle="modal"
+                          data-bs-target="#logout_modal"
+                        ><i className="isax isax-logout-15" />
+                          Logout
+                        </a>
             </li>
             
           </ul>
         </div>
       </div>
-      <Logout/>
+      <LogoutModal/>
 
       {/* /Sidebar */}
     </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Link } from 'react-router-dom';
-import { Table } from 'antd';
+import { Modal, Select, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import moment from 'moment';
 
@@ -25,6 +25,7 @@ interface Reservation {
 
 interface TableData {
     key: string;
+    _id: string;
     numReservation: string;
     circuitName: string;
     nbr_place: string;
@@ -50,6 +51,10 @@ const BookingTable = (props: { numPage: any }) => {
     });
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const [searchEmail, setSearchEmail] = useState<string>("");
+    const [selectedReservation, setSelectedReservation] = useState<TableData | null>(null);
+    const [newStatus, setNewStatus] = useState<string>("");
+    const [modalVisible, setModalVisible] = useState<boolean>(false);
+
 
     useEffect(() => {
         const fetchReservations = async () => {
@@ -97,6 +102,7 @@ const BookingTable = (props: { numPage: any }) => {
 
     const transformedData: TableData[] = reservations.map((reservation) => ({
         key: reservation._id,
+        _id: reservation._id, 
         numReservation: reservation.Num_Reservation,
         circuitName: reservation.circuitName,
         nbr_place: `${reservation.nbr_place} place${reservation.nbr_place > 1 ? 's' : ''}`,
@@ -113,14 +119,23 @@ const BookingTable = (props: { numPage: any }) => {
             title: "Reservation ID",
             dataIndex: "numReservation",
             key: "numReservation",
-            render: (text: string) => (
-                <Link to="#" className="link-primary fw-medium">
-                    {text}
+            render: (text: string, record: TableData) => (
+                <Link
+                  to="#"
+                  className="link-primary fw-medium"
+                  onClick={() => {
+                    setSelectedReservation(record); // record includes numReservation
+                    setNewStatus(record.status);
+                    setModalVisible(true);
+                  }}
+
+                >
+                  {text}
                 </Link>
-            ),
+              ),
         },
         {
-            title: "Circuit",
+            title: "Tour",
             dataIndex: "circuitName",
             key: "circuitName",
         },
@@ -130,7 +145,7 @@ const BookingTable = (props: { numPage: any }) => {
             key: "nbr_place",
         },
         {
-            title: "Voyageurs",
+            title: "Passengers",
             dataIndex: "voyageurEmails",
             key: "voyageurEmails",
             render: (emails: string) => (
@@ -149,19 +164,36 @@ const BookingTable = (props: { numPage: any }) => {
             dataIndex: "volDate",
             key: "volDate",
         },
-        {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (text: string) => (
-                <span className={`badge rounded-pill ${
-                    text === "confirmé" ? "bg-success" :
-                    text === "annulé" ? "bg-danger" : "bg-warning"
-                }`}>
-                    {text}
-                </span>
-            ),
-        },
+    {
+  title: "Status",
+  dataIndex: "status",
+  key: "status",
+  render: (text: string) => {
+    // Normalize text to match keys in the map
+    const normalizedText = text.replace(/\s/g, "_").toLowerCase();
+
+    const statusMap: Record<string, string> = {
+      confirmé: "Confirmed",
+      annulé: "Cancelled",
+      en_attente: "Pending",
+    };
+
+    const badgeClass =
+      normalizedText === "confirmé"
+        ? "bg-success"
+        : normalizedText === "annulé"
+        ? "bg-danger"
+        : "bg-warning";
+
+    return (
+      <span className={`badge rounded-pill ${badgeClass}`}>
+        {statusMap[normalizedText] || text}
+      </span>
+    );
+  },
+}
+
+,
         {
             title: "Total Price",
             dataIndex: "totalPrice",
@@ -261,7 +293,7 @@ const BookingTable = (props: { numPage: any }) => {
                                                   setDropdownOpen(false);
                                               }}
                                           >
-                                              tending
+                                              Pending
                                           </button>
                                       </li>
                                       <li>
@@ -272,7 +304,7 @@ const BookingTable = (props: { numPage: any }) => {
                                                   setDropdownOpen(false);
                                               }}
                                           >
-                                              All Statuses
+                                              All Status
                                           </button>
                                       </li>
                                   </ul>
@@ -297,6 +329,43 @@ const BookingTable = (props: { numPage: any }) => {
                     />
                 </div>
             </div>
+            <Modal
+  title={`Update Status - ${selectedReservation?.numReservation}`}
+  open={modalVisible}
+  onCancel={() => setModalVisible(false)}
+  onOk={async () => {
+    if (!newStatus || !selectedReservation?.numReservation) {
+      return;
+    }
+  
+    try {
+      await axios.patch(
+        `http://127.0.0.1:3000/reservation/updateReservationStatus/${selectedReservation.numReservation}`,
+        { status: newStatus }
+      );
+      setModalVisible(false);
+      setSelectedReservation(null);
+    } catch (error) {
+      console.error("Failed to update:", error);
+    }
+  }}
+  
+  
+  okText="Update"
+  cancelText="Cancel"
+>
+  <p>Pick a new statut:</p>
+  <Select
+    style={{ width: '100%' }}
+    value={newStatus}
+    onChange={value => setNewStatus(value)}
+  >
+    <Select.Option value="confirmé">Confirmed</Select.Option>
+    <Select.Option value="annulé">cancelled</Select.Option>
+    <Select.Option value="en attente">pending</Select.Option>
+  </Select>
+</Modal>
+
         </div>
     );
 };

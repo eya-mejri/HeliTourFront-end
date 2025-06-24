@@ -122,9 +122,9 @@ const AgentDashboard = () => {
         
   
         // Step 2: Fetch the count of reservations for each ville
-        const series: number[] = []; // Create a new array for series
-        const labels: string[] = []; // Create a new array for labels
-        const colors: string[] = []; // Create a new array for colors
+        const series: number[] = []; 
+        const labels: string[] = []; 
+        const colors: string[] = []; 
         const bookings = [];
   
         for (let i = 0; i < villes.length; i++) {
@@ -134,26 +134,26 @@ const AgentDashboard = () => {
             `http://127.0.0.1:3000/reservation/getByVilleName/${ville.Nom}`
           );
           const count = reservationsResponse.data !== null ? reservationsResponse.data.length : 0;
-          bookings.push({ name: ville.Nom, count, color: colorList[i] }); // Assign color from colorList
+          bookings.push({ name: ville.Nom, count, color: colorList[i] }); 
           setVilleBookings(bookings);
           
   
           // Check if reservationsResponse.data is not null
           if (reservationsResponse.data !== null) {
-            series.push(reservationsResponse.data.length); // Add count to the series array
-            labels.push(ville.Nom); // Add ville name to the labels array
-            colors.push(colorList[i]); // Add color to the colors array
+            series.push(reservationsResponse.data.length);
+            labels.push(ville.Nom); 
+            colors.push(colorList[i]); 
           }
         }
   
         // Step 3: Update the donutChart state immutably
         setDonutChart((prevState: any) => ({
           ...prevState,
-          series, // Use the new series array
+          series, 
           options: {
             ...prevState.options,
-            labels, // Use ville names as labels
-            colors, // Use the colors array
+            labels, 
+            colors,
           },
         }));
   
@@ -188,200 +188,7 @@ const AgentDashboard = () => {
     /*console.log('Updated dataReserv:', dataReserv);*/
   }, [dataReserv]);
 
-  
-  /*const data = AgentDashboardData;
-  const columns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      render: (text: any, render: any) => (
-        <Link
-          to="#"
-          className="link-primary fw-medium"
-          data-bs-toggle="modal"
-          data-bs-target={`#${render.id}`}
-        >
-          {render.id}
-        </Link>
-
-      ),
-      sorter: (a: TableData, b: TableData) => a.id.length - b.id.length,
-    },
-    {
-      title: "Hotel",
-      dataIndex: "hotel",
-      key: "hotel",
-      render: (text: any, render: any) => (
-        <div className="d-flex align-items-center">
-          <Link to={routes.hotelDetails} className="avatar avatar-lg">
-            <ImageWithBasePath
-              src={render.hotelImage}
-              className="img-fluid rounded-circle"
-              alt="img"
-            />
-          </Link>
-          <div className="ms-2">
-            <p className="text-dark mb-0 fw-medium fs-14">
-              <Link to={routes.hotelDetails}>{render.hotelName}</Link>
-            </p>
-            <span className="fs-14 fw-normal text-gray-6">{render.location}</span>
-          </div>
-        </div>
-      ),
-      sorter: (a: TableData, b: TableData) =>
-        a.hotel.length - b.hotel.length,
-    },
-    {
-      title: "Room & Guest",
-      dataIndex: "room",
-      key: "room",
-      render: (text: any, render: any) => (
-        <>
-          <h6 className="fs-14 mb-1">{render.room}</h6>
-          <span className="fs-14 fw-normal text-gray-6">{render.guest}</span>
-        </>
-
-      ),
-      sorter: (a: TableData, b: TableData) => a.room.length - b.room.length,
-    },
-    {
-      title: "Days",
-      dataIndex: "days",
-      key: "days",
-      sorter: (a: TableData, b: TableData) => a.days.length - b.days.length,
-    },
-    {
-      title: "Pricing",
-      dataIndex: "pricing",
-      key: "pricing",
-      sorter: (a: TableData, b: TableData) => a.pricing.length - b.pricing.length,
-    },
-    {
-      title: "Booked on",
-      dataIndex: "bookedOn",
-      key: "bookedOn",
-      sorter: (a: TableData, b: TableData) => a.date.length - b.date.length,
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (text: any, render: any) => (
-        <span className={`badge rounded-pill d-inline-flex align-items-center fs-10 ${text === 'Upcoming' ? 'badge-info' : text === 'Pending' ? 'badge-secondary' : text === 'Cancelled' ? 'badge-danger' : text === 'Completed' ? 'badge-success' : ''}`}>
-          <i className="fa-solid fa-circle fs-5 me-1" />
-          {render.status}
-        </span>
-
-      ),
-      sorter: (a: TableData, b: TableData) => a.status.length - b.status.length,
-    },
-    {
-      title: "",
-      dataIndex: "action",
-      render: (text: any, render: any) => (
-        <div className="d-flex align-items-center">
-          <Link
-            to="#"
-            data-bs-toggle="modal"
-            data-bs-target={`#${render.action}`}
-          >
-            <i className="isax isax-eye" />
-          </Link>
-        </div>
-      ),
-      sorter: (a: TableData, b: TableData) => a.action.length - b.action.length,
-    },
-  ];*/
-   // Fetch the number of bookings from the backend
-   /*useEffect(() => {
-    const fetchConfirmedBookingCount = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:3000/reservation/getRecent/confirmé');
-        if (!response.ok) {
-          throw new Error('Failed to fetch bookings');
-        }
-        const data = await response.json();
-        setConfirmedBookingCount(data.length); // Set the count of bookings
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-      }
-    };
-
-    fetchConfirmedBookingCount();
-  }, []); 
-  //get the percentage 
-  useEffect(() => {
-    const fetchPerCount = async () => {
-      try {
-        const response = await fetch(`http://127.0.0.1:3000/reservation/bookingTrend30Days/confirmé`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch percentage');
-        }
-        const data = await response.json();
-        setPer(data.percentageChange);
-        setStatus(data.trend);
-      } catch (error) {
-        console.error('Error fetching per:', error);
-      }
-    };
-
-    fetchPerCount();
-  }, []); 
-
-    // Fetch the number of bookings from the backend
-    useEffect(() => {
-      const fetchPendingBookingCount = async () => {
-        try {
-          const response = await fetch('http://127.0.0.1:3000/reservation/getRecent/en attente');
-          if (!response.ok) {
-            throw new Error('Failed to fetch bookings');
-          }
-          const data = await response.json();
-          setPendingBookingCount(data.length); // Set the count of bookings
-        } catch (error) {
-          console.error('Error fetching bookings:', error);
-        }
-      };
-  
-      fetchPendingBookingCount();
-    }, []); 
-
-
-    //get the percentage 
-  useEffect(() => {
-    const fetchPercentagePendingCount = async () => {
-      try {
-        const response = await fetch(`http://127.0.0.1:3000/reservation/bookingTrend30Days/${"en attente"}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch percentage');
-        }
-        const data = await response.json();
-        setPerPending(data.percentageChange);
-        setStatusPending(data.trend);
-      } catch (error) {
-        console.error('Error fetching per:', error);
-      }
-    };
-
-    fetchPercentagePendingCount();
-  }, []); 
- // Fetch the number of bookings from the backend
- useEffect(() => {
-  const fetchAnnuleBookingCount = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:3000/reservation/getRecent/annulé');
-      if (!response.ok) {
-        throw new Error('Failed to fetch bookings');
-      }
-      const data = await response.json();
-      setAnnuleBookingCount(data.length); // Set the count of bookings
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    }
-  };
-
-  fetchAnnuleBookingCount();
-}, []); */
+ 
 
 useEffect(() => {
   const fetchBookingAnalytics = async () => {
@@ -546,22 +353,6 @@ useEffect(() => {
   fetchReservationCount();
 }, []);
 
-useEffect(() => {
-  const fetchReservationCount = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:3000/reservation/getall');
-      if (!response.ok) {
-        throw new Error('Failed to fetch Reservation ');
-      }
-      const data = await response.json();
-      setReservationCount(data.length); // Set the count of bookings
-    } catch (error) {
-      console.error('Error fetching profils:', error);
-    }
-  };
-
-  fetchReservationCount();
-}, []);
 
 
   return (
@@ -597,37 +388,14 @@ useEffect(() => {
                 </div>
                 {/* /Earnings */}
               </div>
-              <div className="row">
-                {/* Recently Added */}
-                <div className='col-xl-12 col-xxl-12 d-flex'>
-                  <div className=" card shadow-none flex-fill">
-                    <Grid size={{ xs: 12, md: 12, lg: 12 }}>
-                      <AnalyticsConversionRates
-                        title="Conversion rates"
-                        subheader="(+43%) than last year"
-                        chart={{
-                          categories: ['Italy', 'Japan', 'China', 'Canada', 'France'],
-                          series: [
-                            { name: '2022', data: [44, 55, 41, 64, 22] },
-                            { name: '2023', data: [53, 32, 33, 52, 13] },
-                          ],
-                        }}
-                      />
-                    </Grid>
-
-                  </div>
-                </div>
-                {/* /Recently Added */}
-                {/* Recent Invoices */}
-                {/* /Recent Invoices */}
-              </div>
+            
               {/* Add Lists */}
               <div className="row row-cols-1 row-cols-md-3 row-cols-xl-5 justify-content-center">
-                <AddCard title="Villes" number={`${numberVille} Villes`} class="bg-success-100" lien="routes.addHotel"/>
-                <AddCard title="Circuits" number={`${circuitCount} Circuits`}  class="bg-pink-100" lien="routes.addFlight"/>
-                <AddCard title="Reserv" number={`${reservationCount} Reservations`} class="bg-danger-100" lien="routes.addTour"/>
-                <AddCard title="Appareil" number={`${appareilCount} Appareils`} class="bg-purple-100" lien ="/appareil/AddAppareil"/>
-                <AddCard title="Vol" number={`${volCount} Vols `} class="bg-cyan-100" lien="/vol/AddVol"/>
+                <AddCard title="Destination" number={`${numberVille} Destinations`} class="bg-success-100" lien="routes.addHotel"/>
+                <AddCard title="Tour" number={`${circuitCount} Tours`}  class="bg-pink-100" lien="routes.addFlight"/>
+                <AddCard title="Reservation" number={`${reservationCount} Reservations`} class="bg-danger-100" lien="routes.addTour"/>
+                <AddCard title="Device" number={`${appareilCount} Devices`} class="bg-purple-100" lien ="/appareil/AddAppareil"/>
+                <AddCard title="Flight" number={`${volCount} Flights `} class="bg-cyan-100" lien="/vol/AddVol"/>
                 
               </div>
               {/* /Add Lists */}

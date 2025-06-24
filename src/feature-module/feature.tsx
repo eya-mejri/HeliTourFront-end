@@ -5,6 +5,7 @@ import Cursor from "../core/common/cursor/cursor";
 import BackToTop from "../core/common/backtotop/backToTop";
 import Footer from "../core/common/footer/footer";
 import io from "socket.io-client";
+import ChatbaseWidget from "./Components/chatbot/ChatbaseWidget";
 
 const socket = io('http://localhost:3002', { autoConnect: true });
 const Feature = () => {
@@ -94,8 +95,8 @@ const Feature = () => {
           
         </>
       {/* <Loader/> */}
-
       <div className="sidebar-overlay"></div>
+
     </div>
     </>
   );
